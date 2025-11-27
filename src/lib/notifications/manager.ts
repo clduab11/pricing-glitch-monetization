@@ -111,7 +111,7 @@ export class NotificationManager {
     const supabase = createServerSupabaseClient();
 
     const notification: Partial<Notification> = {
-      id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       glitch_id: glitch.id,
       channel,
       message: {

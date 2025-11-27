@@ -212,7 +212,7 @@ export async function scrapeAndDetect(url: string): Promise<ScrapeResult> {
     return { success: false, error: 'Could not extract product price' };
   }
 
-  const productId = `prod_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const productId = `prod_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   const product: Product = {
     id: productId,
     product_name: extraction.product_name || scrapeResult.data.metadata?.title || 'Unknown Product',
@@ -241,7 +241,7 @@ export async function scrapeAndDetect(url: string): Promise<ScrapeResult> {
   }
 
   // Create anomaly record
-  const anomalyId = `anomaly_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const anomalyId = `anomaly_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   const anomaly = {
     id: anomalyId,
     product_id: product.id,
