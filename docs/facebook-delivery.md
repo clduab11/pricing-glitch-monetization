@@ -141,15 +141,22 @@ async function postWithPhoto(glitch: ValidatedGlitch): Promise<string> {
 ```typescript
 function formatGlitchMessage(glitch: ValidatedGlitch): string {
   const { product, validation, profit_margin } = glitch;
-  const savings = (product.original_price ?? product.current_price) - product.current_price;
+  const originalPrice = product.original_price ?? 0;
+  const savings = originalPrice - product.current_price;
+  
+  // Build price comparison section
+  const priceSection = originalPrice > 0
+    ? `💰 Was: $${originalPrice.toFixed(2)}
+🎯 Now: $${product.current_price.toFixed(2)}
+💵 You Save: $${savings.toFixed(2)} (${Math.round(profit_margin)}% OFF!)`
+    : `🎯 Price: $${product.current_price.toFixed(2)}
+📉 Discount: ${Math.round(profit_margin)}% OFF!`;
   
   return `🚨 PRICING ERROR ALERT! 🚨
 
 ${product.product_name}
 
-💰 Was: $${(product.original_price ?? 0).toFixed(2)}
-🎯 Now: $${product.current_price.toFixed(2)}
-💵 You Save: $${savings.toFixed(2)} (${Math.round(profit_margin)}% OFF!)
+${priceSection}
 
 ⚡ Confidence: ${validation.confidence}%
 📦 Stock: ${product.stock_status === 'in_stock' ? '✅ In Stock' : '⚠️ Limited'}
@@ -168,9 +175,14 @@ ${product.url}
 ```typescript
 function formatCompactMessage(glitch: ValidatedGlitch): string {
   const { product, profit_margin } = glitch;
+  const originalPrice = product.original_price ?? 0;
+  
+  const priceText = originalPrice > 0
+    ? `$${product.current_price.toFixed(2)} (was $${originalPrice.toFixed(2)})`
+    : `$${product.current_price.toFixed(2)}`;
   
   return `🔥 ${Math.round(profit_margin)}% OFF - ${product.product_name}
-$${product.current_price.toFixed(2)} (was $${(product.original_price ?? 0).toFixed(2)})
+${priceText}
 👉 ${product.url}`;
 }
 ```

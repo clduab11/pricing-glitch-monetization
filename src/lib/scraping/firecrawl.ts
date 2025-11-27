@@ -8,10 +8,13 @@ const FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
 
 interface FirecrawlScrapeOptions {
   url: string;
-  formats?: ('markdown' | 'html' | 'json' | 'extract')[];
+  formats?: ('markdown' | 'html' | 'json')[];
   includeTags?: string[];
   excludeTags?: string[];
   waitFor?: number;
+  extract?: {
+    schema: Record<string, unknown>;
+  };
 }
 
 interface FirecrawlResponse {
@@ -47,23 +50,30 @@ export async function scrapeUrl(options: FirecrawlScrapeOptions): Promise<Firecr
   }
 
   try {
+    const requestBody: Record<string, unknown> = {
+      url: options.url,
+      formats: options.formats || ['markdown'],
+      includeTags: options.includeTags,
+      excludeTags: options.excludeTags,
+      waitFor: options.waitFor || 2000,
+      // Stealth mode options
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
+    };
+
+    // Add extract schema for structured data extraction
+    if (options.extract) {
+      requestBody.extract = options.extract;
+    }
+
     const response = await fetch(`${FIRECRAWL_API_URL}/scrape`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
       },
-      body: JSON.stringify({
-        url: options.url,
-        formats: options.formats || ['markdown'],
-        includeTags: options.includeTags,
-        excludeTags: options.excludeTags,
-        waitFor: options.waitFor || 2000,
-        // Stealth mode options
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        },
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -200,8 +210,25 @@ export async function scrapeAndDetect(url: string): Promise<ScrapeResult> {
     return { success: false, error: 'URL recently processed (deduplication)' };
   }
 
-  // Scrape the URL with extract format for LLM extraction
-  const scrapeResult = await scrapeUrl({ url, formats: ['extract'] });
+  // Scrape the URL with JSON format and extract schema for structured data
+  const scrapeResult = await scrapeUrl({ 
+    url, 
+    formats: ['json'],
+    extract: {
+      schema: {
+        type: 'object',
+        properties: {
+          product_name: { type: 'string' },
+          current_price: { type: 'number' },
+          original_price: { type: 'number' },
+          stock_status: { type: 'string' },
+          image_url: { type: 'string' },
+          category: { type: 'string' },
+        },
+        required: ['product_name', 'current_price'],
+      },
+    },
+  });
   if (!scrapeResult.success || !scrapeResult.data) {
     return { success: false, error: scrapeResult.error || 'Scraping failed' };
   }
