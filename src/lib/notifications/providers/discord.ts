@@ -54,23 +54,23 @@ export class DiscordProvider implements NotificationProvider {
   }
 
   private createEmbed(glitch: ValidatedGlitch): Record<string, unknown> {
-    const { product, validation, profit_margin } = glitch;
-    const savings = (product.original_price ?? 0) - product.current_price;
+    const { product, profitMargin, confidence, glitchType } = glitch;
+    const savings = (product.originalPrice ?? 0) - product.price;
 
     return {
-      title: `🔥 ${product.product_name}`,
-      description: `**${Math.round(profit_margin)}% OFF** - Confidence: ${validation.confidence}%`,
+      title: `🔥 ${product.title}`,
+      description: `**${Math.round(profitMargin)}% OFF** - Confidence: ${confidence}%`,
       url: product.url,
-      color: this.getColorByDiscount(profit_margin),
+      color: this.getColorByDiscount(profitMargin),
       fields: [
         {
           name: 'Original Price',
-          value: `$${(product.original_price ?? 0).toFixed(2)}`,
+          value: `$${(product.originalPrice ?? 0).toFixed(2)}`,
           inline: true,
         },
         {
           name: 'Current Price',
-          value: `$${product.current_price.toFixed(2)}`,
+          value: `$${product.price.toFixed(2)}`,
           inline: true,
         },
         {
@@ -80,21 +80,21 @@ export class DiscordProvider implements NotificationProvider {
         },
         {
           name: 'Retailer',
-          value: product.retailer_id.toUpperCase(),
+          value: product.retailer.toUpperCase(),
           inline: true,
         },
         {
           name: 'Stock',
-          value: product.stock_status === 'in_stock' ? '✅ In Stock' : '⚠️ Limited',
+          value: product.stockStatus === 'in_stock' ? '✅ In Stock' : '⚠️ Limited',
           inline: true,
         },
         {
           name: 'Glitch Type',
-          value: validation.glitch_type.replace('_', ' ').toUpperCase(),
+          value: glitchType.replace('_', ' ').toUpperCase(),
           inline: true,
         },
       ],
-      thumbnail: product.image_url ? { url: product.image_url } : undefined,
+      thumbnail: product.imageUrl ? { url: product.imageUrl } : undefined,
       footer: {
         text: '⏰ Act fast - prices may change!',
       },

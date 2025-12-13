@@ -1,6 +1,5 @@
 import { PricingAnomaly, ValidatedGlitch, ValidationResult } from '@/types';
 import { publishConfirmedGlitch } from '@/lib/clients/redis';
-import { createServerSupabaseClient } from '@/lib/clients/supabase';
 
 // OpenRouter API configuration
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -116,26 +115,28 @@ export async function validateAnomaly(anomaly: PricingAnomaly): Promise<Validati
  * Format anomaly data for AI analysis
  */
 function formatAnomalyForAI(anomaly: PricingAnomaly): string {
-  const { product, anomaly_type, z_score, discount_percentage, initial_confidence } = anomaly;
+  // Use non-null assertion or optional chaining for optional product properties
+  const product = anomaly.product!;
+  const { anomalyType, zScore, discountPercentage, initialConfidence } = anomaly;
   
   return `Analyze this potential pricing error:
 
-Product: ${product.product_name}
-Retailer: ${product.retailer_id}
+Product: ${product.title}
+Retailer: ${product.retailer}
 Category: ${product.category || 'Unknown'}
 
 Pricing:
-- Current Price: $${product.current_price.toFixed(2)}
-- Original Price: ${product.original_price ? `$${product.original_price.toFixed(2)}` : 'Not listed'}
-- Discount: ${discount_percentage.toFixed(1)}%
+- Current Price: $${product.price.toFixed(2)}
+- Original Price: ${product.originalPrice ? `$${product.originalPrice.toFixed(2)}` : 'Not listed'}
+- Discount: ${discountPercentage.toFixed(1)}%
 
 Detection Signals:
-- Anomaly Type: ${anomaly_type}
-- Z-Score: ${z_score?.toFixed(2) || 'N/A'}
-- Initial Confidence: ${initial_confidence}%
+- Anomaly Type: ${anomalyType}
+- Z-Score: ${zScore?.toFixed(2) || 'N/A'}
+- Initial Confidence: ${initialConfidence}%
 
-Stock Status: ${product.stock_status}
-Detection Time: ${anomaly.detected_at}
+Stock Status: ${product.stockStatus}
+Detection Time: ${anomaly.detectedAt}
 
 Is this a pricing glitch or a legitimate sale?`;
 }
@@ -144,34 +145,34 @@ Is this a pricing glitch or a legitimate sale?`;
  * Fallback validation using rule-based logic (when AI is unavailable)
  */
 function fallbackValidation(anomaly: PricingAnomaly): ValidationResult {
-  const { discount_percentage, z_score, anomaly_type, initial_confidence } = anomaly;
+  const { discountPercentage, zScore, anomalyType, initialConfidence } = anomaly;
   
   // Rule-based decision making
   let isGlitch = false;
-  let confidence = initial_confidence;
+  let confidence = initialConfidence;
   let reasoning = '';
   let glitchType: ValidationResult['glitch_type'] = 'unknown';
 
-  if (anomaly_type === 'decimal_error') {
+  if (anomalyType === 'decimal_error') {
     isGlitch = true;
     confidence = Math.min(95, confidence + 10);
     reasoning = 'Price ratio suggests decimal point error (price is less than 1% of original).';
     glitchType = 'decimal_error';
-  } else if (discount_percentage > 90) {
+  } else if (discountPercentage > 90) {
     isGlitch = true;
     confidence = Math.min(90, confidence + 5);
-    reasoning = `Extremely high discount (${discount_percentage.toFixed(0)}%) is very likely a pricing error.`;
+    reasoning = `Extremely high discount (${discountPercentage.toFixed(0)}%) is very likely a pricing error.`;
     glitchType = 'database_error';
-  } else if (z_score && z_score > 4 && discount_percentage > 60) {
+  } else if (zScore && zScore > 4 && discountPercentage > 60) {
     isGlitch = true;
     confidence = Math.min(85, confidence);
-    reasoning = `High Z-score (${z_score.toFixed(1)}) combined with ${discount_percentage.toFixed(0)}% discount indicates anomaly.`;
+    reasoning = `High Z-score (${zScore.toFixed(1)}) combined with ${discountPercentage.toFixed(0)}% discount indicates anomaly.`;
     glitchType = 'database_error';
-  } else if (discount_percentage > 70) {
-    isGlitch = discount_percentage > 80;
+  } else if (discountPercentage > 70) {
+    isGlitch = discountPercentage > 80;
     confidence = Math.min(70, confidence);
-    reasoning = `Significant discount (${discount_percentage.toFixed(0)}%). May be legitimate sale or error.`;
-    glitchType = discount_percentage > 80 ? 'clearance' : 'unknown';
+    reasoning = `Significant discount (${discountPercentage.toFixed(0)}%). May be legitimate sale or error.`;
+    glitchType = discountPercentage > 80 ? 'clearance' : 'unknown';
   } else {
     isGlitch = false;
     confidence = 100 - confidence;
@@ -204,19 +205,23 @@ export async function validateAndProcess(anomaly: PricingAnomaly): Promise<Valid
   const glitchId = `glitch_${crypto.randomUUID()}`;
   const validatedGlitch: ValidatedGlitch = {
     id: glitchId,
-    anomaly_id: anomaly.id,
-    product: anomaly.product,
-    validation,
-    profit_margin: anomaly.discount_percentage,
-    estimated_duration: estimateGlitchDuration(validation.glitch_type),
-    validated_at: new Date().toISOString(),
+    anomalyId: anomaly.id,
+    productId: anomaly.productId,
+    product: anomaly.product!,
+    isGlitch: validation.is_glitch,
+    confidence: validation.confidence,
+    reasoning: validation.reasoning,
+    glitchType: validation.glitch_type,
+    profitMargin: anomaly.discountPercentage,
+    estimatedDuration: estimateGlitchDuration(validation.glitch_type),
+    validatedAt: new Date().toISOString(),
   };
 
   // Save to database
   await saveValidatedGlitch(validatedGlitch);
 
   // Publish to Redis for notification workers
-  await publishConfirmedGlitch(glitchId, validatedGlitch);
+  await publishConfirmedGlitch(glitchId, validatedGlitch as unknown as Record<string, unknown>);
 
   // Update anomaly status
   await updateAnomalyStatus(anomaly.id, 'validated');
@@ -246,14 +251,14 @@ function estimateGlitchDuration(glitchType: ValidationResult['glitch_type']): st
  * Update anomaly status in database
  */
 async function updateAnomalyStatus(anomalyId: string, status: PricingAnomaly['status']): Promise<void> {
-  const supabase = createServerSupabaseClient();
+  const { db } = await import('@/db');
   
-  const { error } = await supabase
-    .from('anomalies')
-    .update({ status })
-    .eq('id', anomalyId);
-
-  if (error) {
+  try {
+    await db.pricingAnomaly.update({
+      where: { id: anomalyId },
+      data: { status },
+    });
+  } catch (error) {
     console.error('Error updating anomaly status:', error);
   }
 }
@@ -262,22 +267,23 @@ async function updateAnomalyStatus(anomalyId: string, status: PricingAnomaly['st
  * Save validated glitch to database
  */
 async function saveValidatedGlitch(glitch: ValidatedGlitch): Promise<void> {
-  const supabase = createServerSupabaseClient();
+  const { db } = await import('@/db');
   
-  const { error } = await supabase
-    .from('validated_glitches')
-    .insert({
-      id: glitch.id,
-      anomaly_id: glitch.anomaly_id,
-      is_glitch: glitch.validation.is_glitch,
-      confidence: glitch.validation.confidence,
-      reasoning: glitch.validation.reasoning,
-      glitch_type: glitch.validation.glitch_type,
-      profit_margin: glitch.profit_margin,
-      validated_at: glitch.validated_at,
+  try {
+    await db.validatedGlitch.create({
+      data: {
+        id: glitch.id,
+        anomalyId: glitch.anomalyId,
+        productId: glitch.productId, // Added required field
+        isGlitch: glitch.isGlitch,
+        confidence: glitch.confidence,
+        reasoning: glitch.reasoning,
+        glitchType: glitch.glitchType,
+        profitMargin: glitch.profitMargin,
+        validatedAt: new Date(glitch.validatedAt),
+      },
     });
-
-  if (error) {
+  } catch (error) {
     console.error('Error saving validated glitch:', error);
     throw error;
   }

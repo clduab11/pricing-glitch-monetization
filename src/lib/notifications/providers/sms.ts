@@ -91,13 +91,13 @@ export class SMSProvider implements NotificationProvider {
   }
 
   private formatMessage(glitch: ValidatedGlitch): string {
-    const { product, profit_margin } = glitch;
+    const { product, profitMargin } = glitch;
     
     // SMS has 160 char limit, keep it concise
-    return `🚨 ${Math.round(profit_margin)}% OFF!
-${product.product_name.substring(0, 50)}
-Was: $${(product.original_price ?? 0).toFixed(2)}
-Now: $${product.current_price.toFixed(2)}
+    return `🚨 ${Math.round(profitMargin)}% OFF!
+${product.title.substring(0, 50)}
+Was: $${(product.originalPrice ?? 0).toFixed(2)}
+Now: $${product.price.toFixed(2)}
 ${product.url.substring(0, 50)}`;
   }
 }

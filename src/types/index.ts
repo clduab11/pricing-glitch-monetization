@@ -1,111 +1,151 @@
 import { z } from 'zod';
 
-// Product Schema
-export const ProductSchema = z.object({
-  id: z.string(),
-  product_name: z.string(),
-  current_price: z.number().positive(),
-  original_price: z.number().positive().nullable(),
-  stock_status: z.enum(['in_stock', 'low_stock', 'out_of_stock', 'unknown']),
-  retailer_id: z.string(),
-  last_checked: z.string().datetime(),
-  url: z.string().url(),
-  image_url: z.string().url().optional(),
-  category: z.string().optional(),
-  retailer_sku: z.string().optional(),
-});
-
-export type Product = z.infer<typeof ProductSchema>;
-
-// Pricing Anomaly Schema
-export const PricingAnomalySchema = z.object({
-  id: z.string(),
-  product_id: z.string(),
-  product: ProductSchema,
-  anomaly_type: z.enum(['z_score', 'percentage_drop', 'decimal_error', 'historical']),
-  z_score: z.number().optional(),
-  discount_percentage: z.number(),
-  initial_confidence: z.number().min(0).max(100),
-  detected_at: z.string().datetime(),
-  status: z.enum(['pending', 'validated', 'rejected', 'notified']),
-});
-
-export type PricingAnomaly = z.infer<typeof PricingAnomalySchema>;
-
-// Validation Result Schema
-export const ValidationResultSchema = z.object({
-  is_glitch: z.boolean(),
-  confidence: z.number().min(0).max(100),
-  reasoning: z.string(),
-  glitch_type: z.enum(['decimal_error', 'database_error', 'clearance', 'coupon_stack', 'unknown']),
-});
-
-export type ValidationResult = z.infer<typeof ValidationResultSchema>;
-
-// Validated Glitch Schema
-export const ValidatedGlitchSchema = z.object({
-  id: z.string(),
-  anomaly_id: z.string(),
-  product: ProductSchema,
-  validation: ValidationResultSchema,
-  profit_margin: z.number(),
-  estimated_duration: z.string().optional(),
-  validated_at: z.string().datetime(),
-});
-
-export type ValidatedGlitch = z.infer<typeof ValidatedGlitchSchema>;
-
-// Notification Schema
-export const NotificationSchema = z.object({
-  id: z.string(),
-  glitch_id: z.string(),
-  channel: z.enum(['facebook', 'discord', 'sms']),
-  message: z.object({
-    title: z.string(),
-    body: z.string(),
-    image_url: z.string().url().optional(),
-    link: z.string().url(),
-    pricing: z.object({
-      current: z.number(),
-      original: z.number(),
-      savings: z.number(),
-      discount_percent: z.number(),
-    }),
-  }),
-  status: z.enum(['pending', 'sent', 'delivered', 'failed']),
-  created_at: z.string().datetime(),
-  delivered_at: z.string().datetime().optional(),
-});
-
-export type Notification = z.infer<typeof NotificationSchema>;
-
-// Notification Result
-export interface NotificationResult {
-  success: boolean;
-  channel: 'facebook' | 'discord' | 'sms';
-  messageId?: string;
-  error?: string;
-  sentAt: string;
+export interface Product {
+  id?: string;
+  title: string;
+  price: number;
+  originalPrice?: number;
+  stockStatus?: "in_stock" | "low_stock" | "out_of_stock" | "unknown";
+  retailer: string; // mapped to retailer_id in DB
+  url: string;
+  imageUrl?: string;
+  category?: string;
+  retailerSku?: string;
+  scrapedAt: string | Date;
+  description?: string;
 }
 
-// Notification Provider Interface
+export const ProductSchema = z.object({
+  id: z.string().optional(),
+  title: z.string(),
+  price: z.number(),
+  originalPrice: z.number().optional(),
+  stockStatus: z.enum(["in_stock", "low_stock", "out_of_stock", "unknown"]).optional(),
+  retailer: z.string(),
+  url: z.string(),
+  imageUrl: z.string().optional(),
+  category: z.string().optional(),
+  retailerSku: z.string().optional(),
+  scrapedAt: z.union([z.string(), z.date()]),
+  description: z.string().optional(),
+});
+
+export interface PricingAnomaly {
+  id: string;
+  productId: string;
+  product?: Product;
+  anomalyType: "z_score" | "percentage_drop" | "decimal_error" | "historical";
+  zScore?: number;
+  discountPercentage: number;
+  initialConfidence: number;
+  detectedAt: string;
+  status: "pending" | "validated" | "rejected" | "notified";
+}
+
+export const PricingAnomalySchema = z.object({
+  id: z.string(),
+  productId: z.string(),
+  product: ProductSchema.optional(),
+  anomalyType: z.enum(["z_score", "percentage_drop", "decimal_error", "historical"]),
+  zScore: z.number().optional(),
+  discountPercentage: z.number(),
+  initialConfidence: z.number(),
+  detectedAt: z.string(),
+  status: z.enum(["pending", "validated", "rejected", "notified"]),
+});
+
+export interface ValidatedGlitch {
+  id: string;
+  anomalyId: string;
+  productId: string;
+  product: Product; // Included via relation
+  isGlitch: boolean;
+  confidence: number;
+  reasoning: string;
+  glitchType:
+    | "decimal_error"
+    | "database_error"
+    | "clearance"
+    | "coupon_stack"
+    | "unknown";
+  profitMargin: number;
+  estimatedDuration?: string;
+  validatedAt: string;
+}
+
+export const ValidatedGlitchSchema = z.object({
+  id: z.string(),
+  anomalyId: z.string(),
+  productId: z.string(),
+  product: ProductSchema,
+  isGlitch: z.boolean(),
+  confidence: z.number(),
+  reasoning: z.string(),
+  glitchType: z.enum(["decimal_error", "database_error", "clearance", "coupon_stack", "unknown"]),
+  profitMargin: z.number(),
+  estimatedDuration: z.string().optional(),
+  validatedAt: z.string(),
+});
+
+export interface ScrapingJob {
+  id?: string;
+  url: string;
+  retailer: string;
+  category: string;
+}
+
+export interface ProductData {
+  title: string;
+  price: number;
+  originalPrice?: number;
+  url: string;
+  imageUrl?: string;
+  scrapedAt: string;
+}
+
+export interface DetectResult {
+  is_anomaly: boolean;
+  anomaly_type?: 'z_score' | 'percentage_drop' | 'decimal_error';
+  z_score: number;
+  discount_percentage: number;
+  confidence: number;
+}
+
+export interface ValidationResult {
+  is_glitch: boolean;
+  confidence: number;
+  reasoning: string;
+  glitch_type: "decimal_error" | "database_error" | "clearance" | "coupon_stack" | "unknown";
+}
+
+export interface ScrapeResult {
+  success: boolean;
+  data?: Record<string, unknown>; // Replacing any with Record<string, unknown>
+  error?: string;
+  product?: Product;
+  anomaly?: PricingAnomaly | Partial<PricingAnomaly>; // Simplified type
+}
+
+// Notification Types
+
+export interface NotificationResult {
+  success: boolean;
+  channel?: string;
+  error?: string;
+  messageId?: string;
+  sentAt?: string;
+}
+
 export interface NotificationProvider {
   send(glitch: ValidatedGlitch): Promise<NotificationResult>;
 }
 
-// Scrape Result
-export interface ScrapeResult {
-  success: boolean;
-  product?: Product;
-  anomaly?: PricingAnomaly;
-  error?: string;
-}
-
-// Detect Result
-export interface DetectResult {
-  is_anomaly: boolean;
-  anomaly_type?: PricingAnomaly['anomaly_type'];
-  z_score?: number;
-  discount_percentage?: number;
-  confidence: number;
+export interface Notification {
+  id: string;
+  glitch_id: string;
+  channel: string;
+  message: Record<string, unknown>;
+  status: string;
+  created_at: string;
+  delivered_at?: string;
 }

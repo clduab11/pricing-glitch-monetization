@@ -1,101 +1,95 @@
-import Image from "next/image";
 
-export default function Home() {
+import Link from 'next/link';
+
+export default function LandingPage() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="flex flex-col min-h-screen bg-black text-white">
+      {/* Navbar */}
+      <header className="px-6 h-16 flex items-center justify-between border-b border-white/10">
+        <div className="font-bold text-xl">🔥 GlitchSniper</div>
+        <div className="flex gap-4">
+          <Link href="/pricing" className="px-4 py-2 hover:text-gray-300">Pricing</Link>
+          <Link href="/dashboard" className="px-4 py-2 bg-white text-black rounded-full font-medium hover:bg-gray-200">
+            Login
+          </Link>
         </div>
+      </header>
+
+      {/* Hero */}
+      <main className="flex-1">
+        <section className="py-24 px-6 text-center">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-gradient-to-br from-white to-gray-500 bg-clip-text text-transparent mb-6">
+            Find Pricing Errors <br/> Before They&apos;re Fixed
+          </h1>
+          <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10">
+            Our automated engine monitors 100+ retailers 24/7 to catch decimal errors, coupon stacks, and clearance glitches instantly.
+          </p>
+          <div className="flex justify-center gap-4">
+            <Link href="/pricing" className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-full font-bold text-lg transition-all">
+              Start Snipe&apos;n
+            </Link>
+          </div>
+        </section>
+
+        {/* Live Ticker (Simulated) */}
+        <section className="py-12 border-y border-white/10 bg-white/5 overflow-hidden">
+           <div className="px-6 max-w-6xl mx-auto">
+             <div className="flex gap-8 animate-scroll">
+               <GlitchCard title="Sony TV" price="$19.99" original="$1999.00" retailer="Amazon" />
+               <GlitchCard title="MacBook Pro" price="$50.00" original="$2400.00" retailer="Walmart" />
+               <GlitchCard title="Rolex Watch" price="$150.00" original="$15000.00" retailer="Target" />
+               <GlitchCard title="Dyson Vacuum" price="$9.99" original="$499.99" retailer="BestBuy" />
+             </div>
+           </div>
+        </section>
+
+        {/* Features */}
+        <section className="py-24 px-6 max-w-6xl mx-auto grid md:grid-cols-3 gap-12">
+           <FeatureCard title="Instant Alerts" description="Get notified via Discord/SMS within seconds of a price drop." />
+           <FeatureCard title="99% Saved" description="We specialize in deep discounts (90%+) caused by technical errors." />
+           <FeatureCard title="Reseller Ready" description="Tools to buy in bulk and resell for massive profit." />
+        </section>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      {/* Footer */}
+      <footer className="py-8 px-6 border-t border-white/10 text-center text-gray-500">
+        © 2024 GlitchSniper. All rights reserved.
       </footer>
     </div>
   );
+}
+
+interface GlitchCardProps {
+  title: string;
+  price: string;
+  original: string;
+  retailer: string;
+}
+
+function GlitchCard({ title, price, original, retailer }: GlitchCardProps) {
+  return (
+    <div className="flex-shrink-0 w-64 p-4 rounded-xl bg-gray-900 border border-white/10">
+       <div className="text-xs text-gray-400 uppercase mb-1">{retailer}</div>
+       <div className="font-bold text-lg mb-2">{title}</div>
+       <div className="flex items-baseline gap-2">
+         <span className="text-green-400 font-bold text-xl">{price}</span>
+         <span className="text-gray-600 line-through text-sm">{original}</span>
+       </div>
+    </div>
+  )
+}
+
+interface FeatureCardProps {
+  title: string;
+  description: string;
+}
+
+function FeatureCard({ title, description }: FeatureCardProps) {
+  return (
+    <div className="text-center">
+      <div className="w-12 h-12 bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-400 font-bold">✓</div>
+      <h3 className="text-xl font-bold mb-2">{title}</h3>
+      <p className="text-gray-400">{description}</p>
+    </div>
+  )
 }

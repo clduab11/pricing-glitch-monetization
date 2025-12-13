@@ -1,0 +1,267 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// User & Subscription Models (for Clerk + Stripe integration)
+// ============================================================================
+
+model User {
+  id               String   @id @default(uuid())
+  clerkId          String   @unique @map("clerk_id")
+  email            String   @unique
+  stripeCustomerId String?  @unique @map("stripe_customer_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  subscription Subscription?
+  preferences  UserPreference?
+
+  @@index([email])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model Subscription {
+  id                   String   @id @default(uuid())
+  userId               String   @unique @map("user_id")
+  stripeSubscriptionId String   @unique @map("stripe_subscription_id")
+  stripePriceId        String   @map("stripe_price_id")
+  tier                 String   @default("free") // free, starter, pro, elite
+  status               String   @default("active") // active, canceled, past_due
+  currentPeriodStart   DateTime @map("current_period_start")
+  currentPeriodEnd     DateTime @map("current_period_end")
+  cancelAtPeriodEnd    Boolean  @default(false) @map("cancel_at_period_end")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tier])
+  @@index([status])
+  @@index([currentPeriodEnd])
+  @@map("subscriptions")
+}
+
+model UserPreference {
+  id              String   @id @default(uuid())
+  userId          String   @unique @map("user_id")
+  categories      String[] @default([])
+  retailers       String[] @default([])
+  minProfitMargin Int      @default(50) @map("min_profit_margin")
+  minPrice        Decimal  @default(0) @map("min_price") @db.Decimal(10, 2)
+  maxPrice        Decimal  @default(10000) @map("max_price") @db.Decimal(10, 2)
+  enableDiscord   Boolean  @default(true) @map("enable_discord")
+  enableEmail     Boolean  @default(true) @map("enable_email")
+  enableSMS       Boolean  @default(false) @map("enable_sms")
+  discordUserId   String?  @map("discord_user_id")
+  telegramChatId  String?  @map("telegram_chat_id")
+  webhookUrl      String?  @map("webhook_url")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+// ============================================================================
+// Product & Pricing Models
+// ============================================================================
+
+model Product {
+  id            String   @id @default(uuid())
+  title         String
+  price         Decimal  @db.Decimal(10, 2)
+  originalPrice Decimal? @map("original_price") @db.Decimal(10, 2)
+  stockStatus   String   @default("unknown") @map("stock_status")
+  retailer      String
+  url           String   @unique
+  imageUrl      String?  @map("image_url")
+  category      String?
+  retailerSku   String?  @map("retailer_sku")
+  description   String?
+  scrapedAt     DateTime @default(now()) @map("last_checked")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  priceHistory      PriceHistory[]
+  anomalies         PricingAnomaly[]
+  validatedGlitches ValidatedGlitch[]
+
+  @@index([retailer])
+  @@index([category])
+  @@index([scrapedAt])
+  @@index([retailer, category]) // Composite for filtered queries
+  @@index([price, originalPrice]) // For discount calculations
+  @@map("products")
+}
+
+model PriceHistory {
+  id         String   @id @default(uuid())
+  productId  String   @map("product_id")
+  productUrl String   @map("product_url")
+  price      Decimal  @db.Decimal(10, 2)
+  scrapedAt  DateTime @default(now()) @map("checked_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([productUrl])
+  @@index([scrapedAt])
+  @@index([productId, scrapedAt]) // Composite for historical queries
+  @@map("price_history")
+}
+
+model PricingAnomaly {
+  id                 String   @id @default(uuid())
+  productId          String   @map("product_id")
+  anomalyType        String   @map("anomaly_type")
+  zScore             Decimal? @map("z_score") @db.Decimal(10, 2)
+  discountPercentage Decimal  @map("discount_percentage") @db.Decimal(10, 2)
+  initialConfidence  Int      @map("initial_confidence")
+  status             String   @default("pending")
+  detectedAt         DateTime @default(now()) @map("detected_at")
+
+  product           Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  validatedGlitches ValidatedGlitch[]
+
+  @@index([status])
+  @@index([detectedAt])
+  @@index([productId])
+  @@index([status, detectedAt]) // For pending anomaly queries
+  @@index([discountPercentage]) // For high-discount queries
+  @@map("anomalies")
+}
+
+model ValidatedGlitch {
+  id                String   @id @default(uuid())
+  anomalyId         String   @unique @map("anomaly_id")
+  productId         String   @map("product_id")
+  isGlitch          Boolean  @map("is_glitch")
+  confidence        Int
+  reasoning         String
+  glitchType        String   @map("glitch_type")
+  profitMargin      Decimal  @map("profit_margin") @db.Decimal(10, 2)
+  estimatedDuration String?  @map("estimated_duration")
+  validatedAt       DateTime @default(now()) @map("validated_at")
+
+  anomaly       PricingAnomaly @relation(fields: [anomalyId], references: [id], onDelete: Cascade)
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  @@index([isGlitch])
+  @@index([validatedAt])
+  @@index([productId])
+  @@index([glitchType])
+  @@index([profitMargin]) // For sorting by profit
+  @@index([isGlitch, validatedAt]) // For feed queries
+  @@map("validated_glitches")
+}
+
+model Notification {
+  id          String    @id @default(uuid())
+  glitchId    String    @map("glitch_id")
+  channel     String
+  message     Json
+  status      String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  deliveredAt DateTime? @map("delivered_at")
+
+  glitch ValidatedGlitch @relation(fields: [glitchId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([channel])
+  @@index([createdAt])
+  @@index([glitchId])
+  @@index([status, channel]) // For retry queries
+  @@map("notifications")
+}
+
+// ============================================================================
+// Scheduled Jobs (Cron-like functionality)
+// ============================================================================
+
+model ScheduledJob {
+  id         String    @id @default(uuid())
+  name       String    @unique
+  jobType    String    @map("job_type") // scrape, cleanup, digest, etc.
+  schedule   String // Cron expression (e.g., "0 */15 * * *")
+  enabled    Boolean   @default(true)
+  lastRunAt  DateTime? @map("last_run_at")
+  nextRunAt  DateTime? @map("next_run_at")
+  lastStatus String?   @map("last_status") // success, failed, running
+  lastError  String?   @map("last_error")
+  metadata   Json? // Job-specific configuration
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  runs JobRun[]
+
+  @@index([enabled])
+  @@index([nextRunAt])
+  @@index([jobType])
+  @@map("scheduled_jobs")
+}
+
+model JobRun {
+  id          String    @id @default(uuid())
+  jobId       String    @map("job_id")
+  status      String // pending, running, success, failed
+  startedAt   DateTime  @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  duration    Int? // Duration in milliseconds
+  result      Json? // Job results/stats
+  error       String? // Error message if failed
+
+  job ScheduledJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([status])
+  @@index([startedAt])
+  @@map("job_runs")
+}
+
+// ============================================================================
+// Audit Log (for tracking important events)
+// ============================================================================
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  action    String // subscription.created, glitch.detected, etc.
+  entity    String // user, subscription, product, etc.
+  entityId  String?  @map("entity_id")
+  metadata  Json? // Additional context
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+  @@index([entity, entityId]) // For entity history
+  @@map("audit_logs")
+}
+
+// ============================================================================
+// API Rate Limiting
+// ============================================================================
+
+model ApiUsage {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  endpoint  String
+  count     Int      @default(1)
+  window    DateTime // Start of the rate limit window
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, endpoint, window])
+  @@index([userId])
+  @@index([window])
+  @@map("api_usage")
+}

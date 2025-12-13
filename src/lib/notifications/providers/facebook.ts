@@ -25,7 +25,7 @@ export class FacebookProvider implements NotificationProvider {
     }
 
     try {
-      const postId = glitch.product.image_url
+      const postId = glitch.product.imageUrl
         ? await this.postWithPhoto(glitch)
         : await this.postToFeed(glitch);
 
@@ -75,7 +75,7 @@ export class FacebookProvider implements NotificationProvider {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message,
-        url: glitch.product.image_url,
+        url: glitch.product.imageUrl,
         access_token: this.accessToken,
       }),
     });
@@ -90,25 +90,25 @@ export class FacebookProvider implements NotificationProvider {
   }
 
   private formatMessage(glitch: ValidatedGlitch): string {
-    const { product, validation, profit_margin } = glitch;
-    const savings = (product.original_price ?? 0) - product.current_price;
+    const { product, profitMargin, confidence } = glitch;
+    const savings = (product.originalPrice ?? 0) - product.price;
 
     return `🚨 PRICING ERROR ALERT! 🚨
 
-${product.product_name}
+${product.title}
 
-💰 Was: $${(product.original_price ?? 0).toFixed(2)}
-🎯 Now: $${product.current_price.toFixed(2)}
-💵 You Save: $${savings.toFixed(2)} (${Math.round(profit_margin)}% OFF!)
+💰 Was: $${(product.originalPrice ?? 0).toFixed(2)}
+🎯 Now: $${product.price.toFixed(2)}
+💵 You Save: $${savings.toFixed(2)} (${Math.round(profitMargin)}% OFF!)
 
-⚡ Confidence: ${validation.confidence}%
-📦 Stock: ${product.stock_status === 'in_stock' ? '✅ In Stock' : '⚠️ Limited'}
+⚡ Confidence: ${confidence}%
+📦 Stock: ${product.stockStatus === 'in_stock' ? '✅ In Stock' : '⚠️ Limited'}
 
 ⏰ ACT FAST - Pricing errors can be corrected at any time!
 
 👇 GRAB THE DEAL 👇
 ${product.url}
 
-#PricingError #Deal #Glitch #${product.retailer_id.charAt(0).toUpperCase() + product.retailer_id.slice(1)}`;
+#PricingError #Deal #Glitch #${product.retailer.charAt(0).toUpperCase() + product.retailer.slice(1)}`;
   }
 }

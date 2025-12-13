@@ -1,8 +1,7 @@
-import { NotificationProvider, NotificationResult, ValidatedGlitch, Notification } from '@/types';
+import { NotificationProvider, NotificationResult, ValidatedGlitch } from '@/types';
 import { FacebookProvider } from './providers/facebook';
 import { DiscordProvider } from './providers/discord';
 import { SMSProvider } from './providers/sms';
-import { createServerSupabaseClient } from '@/lib/clients/supabase';
 
 type NotificationChannel = 'facebook' | 'discord' | 'sms';
 
@@ -108,42 +107,31 @@ export class NotificationManager {
     channel: NotificationChannel,
     result: NotificationResult
   ): Promise<void> {
-    const supabase = createServerSupabaseClient();
+    const { db } = await import('@/db');
 
-    const notification: Partial<Notification> = {
-      id: `notif_${crypto.randomUUID()}`,
-      glitch_id: glitch.id,
-      channel,
-      message: {
-        title: `${Math.round(glitch.profit_margin)}% OFF! ${glitch.product.product_name}`,
-        body: `Price dropped from $${(glitch.product.original_price ?? 0).toFixed(2)} to $${glitch.product.current_price.toFixed(2)}`,
-        image_url: glitch.product.image_url,
-        link: glitch.product.url,
-        pricing: {
-          current: glitch.product.current_price,
-          original: glitch.product.original_price ?? 0,
-          savings: (glitch.product.original_price ?? 0) - glitch.product.current_price,
-          discount_percent: glitch.profit_margin,
+    try {
+      await db.notification.create({
+        data: {
+          glitchId: glitch.id,
+          channel,
+          message: {
+            title: `${Math.round(glitch.profitMargin)}% OFF! ${glitch.product.title}`,
+            body: `Price dropped from $${(glitch.product.originalPrice ?? 0).toFixed(2)} to $${glitch.product.price.toFixed(2)}`,
+            image_url: glitch.product.imageUrl,
+            link: glitch.product.url,
+            pricing: {
+              current: glitch.product.price,
+              original: glitch.product.originalPrice ?? 0,
+              savings: (glitch.product.originalPrice ?? 0) - glitch.product.price,
+              discount_percent: glitch.profitMargin,
+            },
+          },
+          status: result.success ? 'sent' : 'failed',
+          // createdAt is automatic
+          deliveredAt: result.success && result.sentAt ? new Date(result.sentAt) : null,
         },
-      },
-      status: result.success ? 'sent' : 'failed',
-      created_at: new Date().toISOString(),
-      delivered_at: result.success ? result.sentAt : undefined,
-    };
-
-    const { error } = await supabase
-      .from('notifications')
-      .insert({
-        id: notification.id,
-        glitch_id: notification.glitch_id,
-        channel: notification.channel,
-        message: notification.message,
-        status: notification.status,
-        created_at: notification.created_at,
-        delivered_at: notification.delivered_at,
       });
-
-    if (error) {
+    } catch (error) {
       console.error('Error saving notification record:', error);
     }
   }

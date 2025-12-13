@@ -1,6 +1,5 @@
 import { Product, DetectResult, ScrapeResult } from '@/types';
 import { isRecentlyProcessed, publishAnomaly } from '@/lib/clients/redis';
-import { createServerSupabaseClient } from '@/lib/clients/supabase';
 
 // Firecrawl API configuration
 const FIRECRAWL_API_URL = 'https://api.firecrawl.dev/v1';
@@ -178,26 +177,28 @@ export function detectAnomaly(
 }
 
 /**
- * Fetch historical prices for a product from Supabase
+ * Fetch historical prices for a product from Prisma
  */
 export async function getHistoricalPrices(productUrl: string, days = 30): Promise<number[]> {
-  const supabase = createServerSupabaseClient();
+  const { db } = await import('@/db');
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - days);
 
-  const { data, error } = await supabase
-    .from('price_history')
-    .select('price')
-    .eq('product_url', productUrl)
-    .gte('checked_at', cutoffDate.toISOString())
-    .order('checked_at', { ascending: false });
+  try {
+    const history = await db.priceHistory.findMany({
+      where: {
+        productUrl,
+        scrapedAt: { gte: cutoffDate },
+      },
+      select: { price: true },
+      orderBy: { scrapedAt: 'desc' },
+    });
 
-  if (error || !data) {
+    return history.map(row => Number(row.price));
+  } catch (error) {
     console.error('Error fetching historical prices:', error);
     return [];
   }
-
-  return data.map(row => row.price as number);
 }
 
 /**
@@ -242,14 +243,14 @@ export async function scrapeAndDetect(url: string): Promise<ScrapeResult> {
   const productId = `prod_${crypto.randomUUID()}`;
   const product: Product = {
     id: productId,
-    product_name: extraction.product_name || scrapeResult.data.metadata?.title || 'Unknown Product',
-    current_price: extraction.current_price,
-    original_price: extraction.original_price || null,
-    stock_status: (extraction.stock_status as Product['stock_status']) || 'unknown',
-    retailer_id: extractRetailerId(url),
-    last_checked: new Date().toISOString(),
+    title: extraction.product_name || scrapeResult.data.metadata?.title || 'Unknown Product',
+    price: extraction.current_price,
+    originalPrice: extraction.original_price || undefined,
+    stockStatus: (extraction.stock_status as Product['stockStatus']) || 'unknown',
+    retailer: extractRetailerId(url),
+    scrapedAt: new Date().toISOString(),
     url,
-    image_url: extraction.image_url || scrapeResult.data.metadata?.ogImage,
+    imageUrl: extraction.image_url || scrapeResult.data.metadata?.ogImage,
     category: extraction.category,
   };
 
@@ -258,8 +259,8 @@ export async function scrapeAndDetect(url: string): Promise<ScrapeResult> {
 
   // Run anomaly detection
   const detection = detectAnomaly(
-    product.current_price,
-    product.original_price,
+    product.price,
+    product.originalPrice || null,
     historicalPrices
   );
 

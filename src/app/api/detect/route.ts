@@ -62,23 +62,24 @@ export async function POST(request: NextRequest) {
       const tempId = crypto.randomUUID();
       const anomaly: PricingAnomaly = {
         id: `temp_${tempId}`,
-        product_id: `temp_prod_${tempId}`,
+        productId: `temp_prod_${tempId}`,
         product: {
           id: `temp_prod_${tempId}`,
-          product_name: data.product_name,
-          current_price: data.current_price,
-          original_price: data.original_price || null,
-          stock_status: 'unknown',
-          retailer_id: data.retailer_id || 'unknown',
-          last_checked: new Date().toISOString(),
+          title: data.product_name,
+          price: data.current_price,
+          originalPrice: data.original_price || undefined,
+          stockStatus: 'unknown',
+          retailer: data.retailer_id || 'unknown',
+          scrapedAt: new Date().toISOString(),
           url: '',
+          // Add default values for required fields in Product type
         },
-        anomaly_type: data.z_score && data.z_score > 3 ? 'z_score' : 'percentage_drop',
-        z_score: data.z_score,
-        discount_percentage: data.discount_percentage || 
+        anomalyType: data.z_score && data.z_score > 3 ? 'z_score' : 'percentage_drop',
+        zScore: data.z_score,
+        discountPercentage: data.discount_percentage || 
           (data.original_price ? ((data.original_price - data.current_price) / data.original_price) * 100 : 0),
-        initial_confidence: 50,
-        detected_at: new Date().toISOString(),
+        initialConfidence: 50,
+        detectedAt: new Date().toISOString(),
         status: 'pending',
       };
 
