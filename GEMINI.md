@@ -1,6 +1,6 @@
 # GEMINI.md - Developer's Guide
 
-This document provides a developer-focused overview of the Pricing Glitch Monetization Platform, based on an analysis of the existing codebase. Its purpose is to guide future development by outlining the current architecture, identifying key areas of the code, and suggesting the next steps to achieve a functional product.
+This document provides a developer-focused overview of the priceslash platform, based on an analysis of the existing codebase. Its purpose is to guide future development by outlining the current architecture, identifying key areas of the code, and suggesting the next steps to achieve a functional product.
 
 ## 🚀 Project Status
 

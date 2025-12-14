@@ -16,7 +16,7 @@ const { PrismaClient } = prismaClientPkg as unknown as {
 
 // Database connection
 const DATABASE_URL = process.env.DATABASE_URL || 
-  'postgresql://postgres:postgres@localhost:5432/pricing_glitch';
+  'postgresql://postgres:postgres@localhost:5432/priceslash';
 
 const pool = new Pool({ connectionString: DATABASE_URL });
 const adapter = new PrismaPg(pool);

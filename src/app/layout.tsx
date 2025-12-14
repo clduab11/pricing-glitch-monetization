@@ -15,7 +15,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "GlitchSniper - Automated Pricing Glitch Monetization",
+  title: "priceslash - Automated Pricing Error Alerts",
   description: "Find and monetize pricing errors in real-time.",
 };
 

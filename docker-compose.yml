@@ -14,7 +14,7 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-pricing_glitch}
+      POSTGRES_DB: ${POSTGRES_DB:-priceslash}
     ports:
       - "5432:5432"
     volumes:
@@ -44,11 +44,11 @@ services:
   # Next.js Application
   app:
     build: *app-build
-    image: pricing-glitch-monetization-app
+    image: priceslash-app
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-pricing_glitch}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-priceslash}
       - REDIS_URL=redis://redis:6379
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -70,9 +70,9 @@ services:
   # Background Worker for scraping jobs
   worker:
     build: *worker-build
-    image: pricing-glitch-monetization-worker
+    image: priceslash-worker
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-pricing_glitch}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-priceslash}
       - REDIS_URL=redis://redis:6379
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -90,9 +90,9 @@ services:
   # Stream worker: validates anomalies (AI) and writes validated glitches
   validator:
     build: *worker-build
-    image: pricing-glitch-monetization-worker
+    image: priceslash-worker
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-pricing_glitch}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-priceslash}
       - REDIS_URL=redis://redis:6379
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -110,9 +110,9 @@ services:
   # Stream worker: sends notifications for confirmed glitches
   notifier:
     build: *worker-build
-    image: pricing-glitch-monetization-worker
+    image: priceslash-worker
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-pricing_glitch}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-priceslash}
       - REDIS_URL=redis://redis:6379
       - REDIS_HOST=redis
       - REDIS_PORT=6379

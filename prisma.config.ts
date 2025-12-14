@@ -11,7 +11,6 @@ export default defineConfig({
   
   // Database connection
   datasource: {
-    url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/pricing_glitch',
+    url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/priceslash',
   },
 });
-

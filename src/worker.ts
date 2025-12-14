@@ -4,7 +4,7 @@ import { PriceAnalysisEngine } from './analysis/engine.js';
 import { NotificationService } from './notifications/service.js';
 
 async function main() {
-  console.log('Starting Pricing Glitch Platform Workers...');
+  console.log('Starting priceslash workers...');
 
   // Initialize systems
   const orchestrator = new ScrapingOrchestrator();

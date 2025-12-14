@@ -1,8 +1,8 @@
-# Pricing Glitch Monetization Platform
+# priceslash
 
 > **Technical architecture and implementation guide for building a profitable pricing error monitoring and subscription monetization platform**
 
-[![GitHub](https://img.shields.io/github/license/clduab11/pricing-glitch-monetization)](LICENSE)
+[![GitHub](https://img.shields.io/github/license/clduab11/priceslash)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 ## 🎯 Executive Summary
@@ -78,7 +78,7 @@ This repository contains comprehensive technical documentation for building a **
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    PRICING GLITCH PLATFORM                  │
+│                    PRICESLASH PLATFORM                      │
 └─────────────────────────────────────────────────────────────┘
 
 ┌──────────────────┐      ┌──────────────────┐      ┌──────────────────┐

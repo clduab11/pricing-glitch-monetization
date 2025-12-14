@@ -318,7 +318,7 @@ export class TelegramNotifier {
       const chatId = msg.chat.id;
       this.bot.sendMessage(
         chatId,
-        'Welcome to Pricing Glitch Alerts! Use /preferences to configure your alerts.'
+        'Welcome to priceslash Alerts! Use /preferences to configure your alerts.'
       );
     });
 
@@ -433,7 +433,7 @@ export class EmailNotifier {
     );
 
     await this.resend.emails.send({
-      from: 'Pricing Glitch Alerts <alerts@yourdomain.com>',
+      from: 'priceslash Alerts <alerts@yourdomain.com>',
       to: email,
       subject: `🚨 ${deals.length} New Pricing Error${deals.length > 1 ? 's' : ''} Found!`,
       html,
@@ -449,9 +449,9 @@ export class EmailNotifier {
     );
 
     await this.resend.emails.send({
-      from: 'Pricing Glitch Weekly <weekly@yourdomain.com>',
+      from: 'priceslash Weekly <weekly@yourdomain.com>',
       to: email,
-      subject: 'Your Weekly Pricing Glitch Digest',
+      subject: 'Your Weekly priceslash Digest',
       html,
     });
   }

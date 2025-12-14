@@ -14,7 +14,7 @@
 
 Build the image:
 
-- `docker build -t pricing-glitch-monetization .`
+- `docker build -t priceslash-app .`
 
 Run with your platform’s env var manager (do not bake secrets into images).
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The web scraping engine is the foundation of the pricing glitch platform. It continuously monitors 100+ retailer websites to discover pricing errors before they become widely known.
+The web scraping engine is the foundation of the priceslash platform. It continuously monitors 100+ retailer websites to discover pricing errors before they become widely known.
 
 ## Architecture
 
