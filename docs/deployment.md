@@ -14,7 +14,7 @@
 
 Build the image:
 
-- `docker build -t priceslash-app .`
+- `docker build -t pricehawk-app .`
 
 Run with your platform’s env var manager (do not bake secrets into images).
 

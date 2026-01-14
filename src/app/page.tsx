@@ -6,7 +6,7 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen bg-black text-white">
       {/* Navbar */}
       <header className="px-6 h-16 flex items-center justify-between border-b border-white/10">
-        <div className="font-bold text-xl">🔥 priceslash</div>
+        <div className="font-bold text-xl">🦅 pricehawk</div>
         <div className="flex gap-4">
           <Link href="/pricing" className="px-4 py-2 hover:text-gray-300">Pricing</Link>
           <Link href="/dashboard" className="px-4 py-2 bg-white text-black rounded-full font-medium hover:bg-gray-200">
@@ -53,7 +53,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="py-8 px-6 border-t border-white/10 text-center text-gray-500">
-        © 2024 priceslash. All rights reserved.
+        © 2024 pricehawk. All rights reserved.
       </footer>
     </div>
   );

@@ -39,7 +39,7 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
       <header className="h-16 border-b border-white/10 px-6 flex items-center justify-between">
-         <div className="font-bold">priceslash Dashboard</div>
+         <div className="font-bold">pricehawk Dashboard</div>
          <div className="flex items-center gap-4">
             <span className="text-sm text-gray-400">{user.emailAddresses[0].emailAddress}</span>
             {/* UserButton would go here */}

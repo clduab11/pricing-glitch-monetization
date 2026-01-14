@@ -65,7 +65,7 @@ export async function validateAnomaly(anomaly: PricingAnomaly): Promise<Validati
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
         'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-        'X-Title': 'priceslash',
+        'X-Title': 'pricehawk',
       },
       body: JSON.stringify({
         model: MODEL,

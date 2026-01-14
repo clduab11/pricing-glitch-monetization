@@ -15,7 +15,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "priceslash - Automated Pricing Error Alerts",
+  title: "pricehawk - Automated Pricing Error Alerts",
   description: "Find and monetize pricing errors in real-time.",
 };
 

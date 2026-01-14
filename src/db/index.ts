@@ -16,7 +16,7 @@ const { PrismaClient } = prismaClientPkg as unknown as {
 
 // Database connection string
 const DATABASE_URL = process.env.DATABASE_URL || 
-  'postgresql://postgres:postgres@localhost:5432/priceslash';
+  'postgresql://postgres:postgres@localhost:5432/pricehawk';
 
 // Connection pool configuration
 const pool = new Pool({

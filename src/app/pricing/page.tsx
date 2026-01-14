@@ -96,7 +96,7 @@ export default function PricingPage() {
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
       <header className="px-6 h-16 flex items-center justify-between border-b border-white/10">
-        <Link href="/" className="font-bold text-xl">🔥 priceslash</Link>
+        <Link href="/" className="font-bold text-xl">🦅 pricehawk</Link>
         <div className="flex gap-4">
           {isSignedIn ? (
             <Link href="/dashboard" className="px-4 py-2 bg-white text-black rounded-full font-medium hover:bg-gray-200">
@@ -212,7 +212,7 @@ export default function PricingPage() {
 
       {/* Footer */}
       <footer className="py-8 px-6 border-t border-white/10 text-center text-gray-500">
-        © {new Date().getFullYear()} priceslash. All rights reserved.
+        © {new Date().getFullYear()} pricehawk. All rights reserved.
       </footer>
     </div>
   );
