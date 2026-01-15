@@ -47,7 +47,7 @@ graph LR
     end
 
     subgraph Delivery ["🚀 Delivery Layer"]
-        F -->|Yes ">80%"| G[Notification Router]
+        F -->|Yes >80%| G[Notification Router]
         G -->|Instant| H[Discord / SMS]
         G -->|Digest| I[Email / Twitter]
     end
