@@ -1,13 +1,13 @@
 # Pricehawk 🦅
 
-### **The Enterprise-Grade Pricing Error Detection Platform**
+## **The Enterprise-Grade Pricing Error Detection Platform**
 
 > **Catch retail pricing glitches before they go viral. Validate with AI. Profit instantly.**
 
 [![License: ELv2](https://img.shields.io/badge/License-ELv2%20%2B%20Commercial-blue)](LICENSE)
-[![Status: Production](https://img.shields.io/badge/Status-Production_Ready-success)]()
-[![Stack](https://img.shields.io/badge/Stack-Next.js_14_%7C_Prisma_%7C_Redis-black)]()
-[![AI](https://img.shields.io/badge/AI-DeepSeek_V3-purple)]()
+![Status: Production](https://img.shields.io/badge/Status-Production_Ready-success)
+![Stack](https://img.shields.io/badge/Stack-Next.js_14_%7C_Prisma_%7C_Redis-black)
+![AI](https://img.shields.io/badge/AI-DeepSeek_V3-purple)
 
 ---
 
@@ -109,9 +109,9 @@ Visit `http://localhost:3000` to access the admin console and view live pricing 
 
 Pricehawk is designed as a SaaS platform with clear monetization channels:
 
-1.  **Subscriptions**: Tiered access (Starter, Pro, Elite) for faster alerts.
-2.  **Affiliate Revenue**: Automatic tag injection on all shared deal links.
-3.  **API Access**: Enterprise data stream for high-volume resellers.
+1. **Subscriptions**: Tiered access (Starter, Pro, Elite) for faster alerts.
+2. **Affiliate Revenue**: Automatic tag injection on all shared deal links.
+3. **API Access**: Enterprise data stream for high-volume resellers.
 
 ```mermaid
 pie title Revenue Streams
