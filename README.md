@@ -7,7 +7,6 @@
 [![License: ELv2](https://img.shields.io/badge/License-ELv2%20%2B%20Commercial-blue)](LICENSE)
 ![Status: Production](https://img.shields.io/badge/Status-Production_Ready-success)
 ![Stack](https://img.shields.io/badge/Stack-Next.js_14_%7C_Prisma_%7C_Redis-black)
-![AI](https://img.shields.io/badge/AI-DeepSeek_V3-purple)
 
 ---
 
