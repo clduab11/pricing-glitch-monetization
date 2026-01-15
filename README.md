@@ -1,4 +1,4 @@
-# PriceHawk
+# Pricehawk
 
 > **Enterprise-grade pricing error detection platform that discovers retail pricing glitches before they go viral, delivering instant notifications to subscribers.**
 
@@ -31,13 +31,13 @@ Modern e-commerce runs on complex, interconnected systems:
 
 The result? Pricing errors occur **every single day** across major retailers. The difference between catching them and missing them is speed—most glitches are corrected within **15-45 minutes** of going viral.
 
-**PriceHawk gives you the edge.** Our AI-powered detection system identifies anomalies within seconds of occurrence and delivers alerts to subscribers before deals spread across social media.
+**Pricehawk gives you the edge.** Our AI-powered detection system identifies anomalies within seconds of occurrence and delivers alerts to subscribers before deals spread across social media.
 
 ---
 
-## What is PriceHawk?
+## What is Pricehawk?
 
-PriceHawk is a subscription-based platform that monitors 100+ retailer websites 24/7, using advanced AI to distinguish genuine pricing errors from legitimate sales. When a real glitch is detected, subscribers receive instant notifications via their preferred channels.
+Pricehawk is a subscription-based platform that monitors 100+ retailer websites 24/7, using advanced AI to distinguish genuine pricing errors from legitimate sales. When a real glitch is detected, subscribers receive instant notifications via their preferred channels.
 
 ### Examples of Common Decimal-Error Pricing Patterns
 
@@ -308,7 +308,7 @@ Price glitches typically follow this lifecycle:
 4. **30-60 minutes**: Goes viral, retailer notices
 5. **60+ minutes**: Price corrected, orders may be canceled
 
-**PriceHawk subscribers get alerts in Phase 1-2**, while public communities are still in Phase 3-4.
+**Pricehawk subscribers get alerts in Phase 1-2**, while public communities are still in Phase 3-4.
 
 ### Risk-Reward Profile
 
@@ -338,13 +338,26 @@ We welcome contributions from the community. See [CONTRIBUTING.md](CONTRIBUTING.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+This software is dual-licensed:
+
+**Elastic License 2.0 (ELv2)** - For non-commercial use, personal projects, educational purposes, and internal business use.
+
+**Commercial License** - Required for:
+- Competing pricing error detection or deal alert services
+- Managed/hosted service offerings
+- Reselling the software or its output
+- Enterprise deployments (100+ users)
+- White-labeling or rebranding
+
+For commercial licensing inquiries, contact **chrisldukes@gmail.com** or visit [parallax-ai.app](https://parallax-ai.app).
+
+See [LICENSE](LICENSE) for full terms.
 
 ---
 
 ## Legal Disclaimer
 
-PriceHawk is an informational service that monitors publicly available pricing data. Users are responsible for:
+Pricehawk is an informational service that monitors publicly available pricing data. Users are responsible for:
 
 - Verifying deal accuracy before purchasing
 - Understanding retailer policies regarding pricing errors
@@ -357,7 +370,7 @@ We make no guarantees about:
 - Accuracy of detected pricing errors
 - Availability of deals at time of notification
 
-PriceHawk is not affiliated with any retailers mentioned. All trademarks belong to their respective owners.
+Pricehawk is not affiliated with any retailers mentioned. All trademarks belong to their respective owners.
 
 ---
 
@@ -369,4 +382,4 @@ PriceHawk is not affiliated with any retailers mentioned. All trademarks belong 
 
 ---
 
-**Discover pricing errors before they go viral. Join PriceHawk.**
+**Discover pricing errors before they go viral. Join Pricehawk.**
