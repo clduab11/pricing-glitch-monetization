@@ -73,7 +73,7 @@ This document provides comprehensive technical research for PriceHawk infrastruc
 - **Coolify (optional PaaS):** $0 (OSS, self-hosted on VPS)[[3]](https://northflank.com/blog/railway-alternatives)
 - **Playwright/Puppeteer:** $0 (OSS, runs on VPS)
 - **Firecrawl/Tavily/Jina MCP:** Free API tier (upgrade as needed)
-- **Total Baseline:** ~$5–$25/mo (single VPS, all-in-one, with free-tier DB)
+- **Total Baseline:** ~$5–$25/mo (reflecting VPS choice from Hetzner to DigitalOcean, with a free-tier DB)
 - **Scaling:** If 4GB RAM/2 vCPU is insufficient (100+ jobs/day, 50+ users), upgrade VPS to 8GB RAM for ~$6.42/mo[[1]](https://getdeploying.com/hetzner), or run DB on Neon/Supabase paid tier.
 
 **Scaling thresholds:**
