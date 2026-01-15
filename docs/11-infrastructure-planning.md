@@ -12,18 +12,18 @@ This document provides comprehensive technical research for PriceHawk infrastruc
 
 | Component         | Option                | Features/Limits                                                                 | Monthly Cost (USD) | Scaling Thresholds                        | Notes                                                                 |
 |-------------------|----------------------|-------------------------------------------------------------------------------|--------------------|-------------------------------------------|-----------------------------------------------------------------------|
-| **Hosting**       | Hetzner VPS (CX23)   | 2 vCPU, 4GB RAM, 40GB SSD, 20TB traffic                                       | $4.08              | Add more RAM/CPU as needed                | Reliable, scalable, low-cost VPS[[1]](https://getdeploying.com/hetzner)              |
-|                   | DigitalOcean Droplet | 2 vCPU, 4GB RAM, 80GB SSD, 4TB traffic                                        | $24                | Larger droplets available                 | Slightly higher cost than Hetzner[[2]](https://costgoat.com/pricing/hetzner)             |
-|                   | Coolify (OSS PaaS)   | Self-hosted PaaS for Docker apps, BYO VPS                                     | $0 + VPS           | VPS resource limits                       | Full control, OSS, more setup[[3]](https://northflank.com/blog/railway-alternatives)                 |
-| **Database**      | Supabase Free Tier   | 500MB DB, 1GB file storage, 10-50K MAU, 2 projects, 50MB/day egress           | $0                 | 500MB DB, 1GB storage, 50MB/day egress    | Paused after 1 week inactivity, 2 projects max[[4]](https://www.metacto.com/blogs/the-true-cost-of-supabase-a-comprehensive-guide-to-pricing-integration-and-maintenance)[[5]](https://supabase.com/pricing)|
-|                   | Neon Free Tier       | 500MB DB, 1 project, 3 branches, 10GB egress, 1 snapshot                      | $0                 | 500MB DB, 3 branches, 1 snapshot          | Usage-based, generous egress                 |
+| **Hosting**       | Hetzner VPS (CX23)   | 2 vCPU, 4GB RAM, 40GB SSD, 20TB traffic                                       | $4.08              | Add more RAM/CPU as needed                | Reliable, scalable, low-cost VPS [1](https://getdeploying.com/hetzner)              |
+|                   | DigitalOcean Droplet | 2 vCPU, 4GB RAM, 80GB SSD, 4TB traffic                                        | $24                | Larger droplets available                 | Slightly higher cost than Hetzner [2](https://costgoat.com/pricing/hetzner)             |
+|                   | Coolify (OSS PaaS)   | Self-hosted PaaS for Docker apps, BYO VPS                                     | $0 + VPS           | VPS resource limits                       | Full control, OSS, more setup [3](https://northflank.com/blog/railway-alternatives)                 |
+| **Database**      | Supabase Free Tier   | 500MB DB, 1GB file storage, 10-50K MAU, 2 projects, 50MB/day egress           | $0                 | 500MB DB, 1GB storage, 50MB/day egress    | Paused after 1 week inactivity, 2 projects max [4](https://www.metacto.com/blogs/the-true-cost-of-supabase-a-comprehensive-guide-to-pricing-integration-and-maintenance) [5](https://supabase.com/pricing)|
+|                   | Neon Free Tier       | 500MB DB, 100 projects, 10 branches per project, 5GB egress, 1 snapshot      | $0                 | 500MB DB, 100 projects, 10 branches, 5GB egress | Usage-based, generous limits (Jan 2026)      |
 |                   | Self-hosted Postgres | Unlimited (VPS-limited), full control                                         | VPS only           | VPS resource limits                       | More setup, but scalable and cheap                                    |
 | **Cache/Queue**   | Valkey (OSS)         | Redis-compatible, single-threaded, no clustering                              | $0                 | VPS resource limits                       | Drop-in Redis replacement, OSS                                        |
 |                   | KeyDB (OSS)          | Redis-compatible, multi-threaded, active-active replication, clustering        | $0                 | VPS resource limits                       | Best performance for multi-core VPS                                   |
 |                   | DragonFly DB (OSS)   | Redis-compatible, multi-threaded, high throughput, clustering                  | $0                 | VPS resource limits                       | Superior throughput, OSS                                              |
 | **Scraping**      | Playwright (OSS)     | Headless browser, JS/SPA support, Docker-ready                                | $0                 | VPS resource limits                       | Industry standard for robust scraping                                 |
 |                   | Puppeteer (OSS)      | Headless Chrome, JS/SPA support                                               | $0                 | VPS resource limits                       | Good fallback, less robust than Playwright                            |
-|                   | Firecrawl MCP        | AI-powered web scraping, pagination, API, LLM integration                     | Free API tier      | API quota, can self-host                  | MCP integration, robust extraction[[6]](https://docs.firecrawl.dev/mcp-server)            |
+|                   | Firecrawl MCP        | AI-powered web scraping, pagination, API, LLM integration                     | Free API tier      | API quota, can self-host                  | MCP integration, robust extraction [6](https://docs.firecrawl.dev/mcp-server)            |
 |                   | Tavily MCP           | Supplementary search, price verification, LLM integration                     | Free API tier      | API quota, can self-host                  | MCP integration, price intelligence                                   |
 |                   | Jina.ai MCP          | Clean content extraction, HTML parsing, LLM integration                       | Free API tier      | API quota, can self-host                  | MCP integration, parsing                                              |
 | **Deployment**    | Docker Compose (OSS) | Multi-service orchestration, easy local/dev/prod parity                        | $0                 | VPS resource limits                       | Standard for self-hosted stacks                                       |
@@ -67,14 +67,14 @@ This document provides comprehensive technical research for PriceHawk infrastruc
 
 ### 1.3 Total Cost Breakdown & Scaling
 
-- **Hetzner VPS (CX23, 2 vCPU, 4GB RAM, 40GB SSD):** $4.08/mo[[1]](https://getdeploying.com/hetzner)
+- **Hetzner VPS (CX23, 2 vCPU, 4GB RAM, 40GB SSD):** $4.08/mo [1](https://getdeploying.com/hetzner)
 - **Supabase/Neon Free Tier:** $0 (upgrade to paid ~$25-30/mo when DB grows beyond 500MB)
 - **Redis/Valkey/KeyDB/DragonFly:** $0 (self-hosted, resource-limited by VPS)
-- **Coolify (optional PaaS):** $0 (OSS, self-hosted on VPS)[[3]](https://northflank.com/blog/railway-alternatives)
+- **Coolify (optional PaaS):** $0 (OSS, self-hosted on VPS) [3](https://northflank.com/blog/railway-alternatives)
 - **Playwright/Puppeteer:** $0 (OSS, runs on VPS)
 - **Firecrawl/Tavily/Jina MCP:** Free API tier (upgrade as needed)
 - **Total Baseline:** ~$5–$25/mo (reflecting VPS choice from Hetzner to DigitalOcean, with a free-tier DB)
-- **Scaling:** If 4GB RAM/2 vCPU is insufficient (100+ jobs/day, 50+ users), upgrade VPS to 8GB RAM for ~$6.42/mo[[1]](https://getdeploying.com/hetzner), or run DB on Neon/Supabase paid tier.
+- **Scaling:** If 4GB RAM/2 vCPU is insufficient (100+ jobs/day, 50+ users), upgrade VPS to 8GB RAM for ~$6.42/mo [1](https://getdeploying.com/hetzner), or run DB on Neon/Supabase paid tier.
 
 **Scaling thresholds:**
 - 100+ daily scraping jobs: 4GB RAM VPS is sufficient with efficient job scheduling.
@@ -146,7 +146,7 @@ Start with self-hosted DB/cache on VPS for lowest cost and full control. Move to
 
 #### Example: Twitter Account
 - 100K followers, 0.1% affiliate conversion, average $2 commission = 100 × $2 = $200/mo (affiliate only)
-- X Ads Revenue: 1M verified impressions = ~$8–$12 payout[[7]](https://buzzvoice.com/blog/how-much-does-twitter-pay/)[[8]](https://www.epidemicsound.com/blog/x-twitter-monetization/)
+- X Ads Revenue: 1M verified impressions = ~$8–$12 payout [7](https://buzzvoice.com/blog/how-much-does-twitter-pay/) [8](https://www.epidemicsound.com/blog/x-twitter-monetization/)
 - Subscriptions: If 1% pay $5/mo = 1,000 × $5 = $5,000/mo (rare)
 
 ### 2.3 Business Model Comparison Matrix
