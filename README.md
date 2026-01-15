@@ -2,7 +2,7 @@
 
 > **Enterprise-grade pricing error detection platform that discovers retail pricing glitches before they go viral, delivering instant notifications to subscribers.**
 
-[![GitHub](https://img.shields.io/github/license/clduab11/pricehawk)](LICENSE)
+[![License: ELv2](https://img.shields.io/badge/License-ELv2%20%2B%20Commercial-blue)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org/)
@@ -261,6 +261,11 @@ docker compose logs -f app
 - [Frontend Architecture](docs/06-frontend-apps.md) - Next.js app structure
 - [Admin Dashboard](docs/07-admin-dashboard.md) - Operations interface
 - [Database Schema](docs/08-database-schema.md) - PostgreSQL design
+- [Jina.ai Integration](docs/09-jina-integration.md) - AI enrichment layer
+
+### Market Context
+
+- [Competitive Landscape](docs/10-competitive-landscape.md) - Market positioning and competitors
 
 ### Operations
 

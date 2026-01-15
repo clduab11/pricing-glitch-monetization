@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { currentUser } from '@clerk/nextjs/server'; // Correct import for Next.js App Router
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { getUserSubscriptionTier, SUBSCRIPTION_TIERS } from '@/lib/subscription';
 
 export default async function DashboardPage() {
@@ -39,7 +40,15 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
       <header className="h-16 border-b border-white/10 px-6 flex items-center justify-between">
-         <div className="font-bold">pricehawk Dashboard</div>
+         <div className="flex items-center gap-6">
+            <div className="font-bold">pricehawk Dashboard</div>
+            <Link 
+              href="/dashboard/hot" 
+              className="px-3 py-1 bg-orange-600 rounded-full text-sm font-medium hover:bg-orange-700 transition-colors"
+            >
+              🔥 Hot Glitches
+            </Link>
+         </div>
          <div className="flex items-center gap-4">
             <span className="text-sm text-gray-400">{user.emailAddresses[0].emailAddress}</span>
             {/* UserButton would go here */}

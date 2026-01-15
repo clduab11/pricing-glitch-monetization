@@ -6,6 +6,10 @@ import {
   runAllCleanup,
   checkDatabaseHealth 
 } from '@/db/utils';
+import { getTopGlitches, DigestGlitch } from '@/lib/analysis/ranking';
+import { buildDigestEmail, buildDigestText } from '@/lib/notifications/templates/digest';
+import { isBeehiivEnabled, publishDigest } from '@/lib/notifications/providers/beehiiv';
+import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
 
@@ -157,43 +161,159 @@ export async function GET(req: NextRequest) {
 // ============================================================================
 
 async function sendDailyDigest(): Promise<Record<string, unknown>> {
-  // Get users with starter tier who should receive daily digest
-  const users = await db.user.findMany({
-    where: {
-      subscription: {
-        tier: { in: ['starter', 'pro', 'elite'] },
-        status: 'active',
-      },
-      preferences: {
-        enableEmail: true,
-      },
-    },
-    include: {
-      preferences: true,
-    },
-  });
-
-  // Get glitches from last 24 hours
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  const glitches = await db.validatedGlitch.findMany({
-    where: {
-      isGlitch: true,
-      validatedAt: { gte: yesterday },
-    },
-    include: { product: true },
-    orderBy: { profitMargin: 'desc' },
-    take: 20,
-  });
-
-  // In production: Send emails to users
-  // For now, just return stats
-  return {
-    usersToNotify: users.length,
-    glitchesFound: glitches.length,
-    // emails would be sent here via Resend
+  const stats = {
+    glitchesFound: 0,
+    eligibleUsers: 0,
+    emailsSent: 0,
+    emailsFailed: 0,
+    beehiivPostId: null as string | null,
+    errors: [] as string[],
   };
+
+  try {
+    // Get top glitches from the last 24 hours
+    const glitches = await getTopGlitches(15);
+    stats.glitchesFound = glitches.length;
+
+    if (glitches.length === 0) {
+      return { ...stats, message: 'No glitches found in the last 24 hours' };
+    }
+
+    // Get eligible users for daily digest
+    const users = await db.user.findMany({
+      where: {
+        subscription: {
+          tier: { in: ['starter', 'pro', 'elite'] },
+          status: 'active',
+        },
+        preferences: {
+          enableEmail: true,
+          enableDailyDigest: true,
+        },
+      },
+      include: {
+        preferences: true,
+      },
+    });
+    stats.eligibleUsers = users.length;
+
+    // Initialize Resend client
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const fromEmail = process.env.EMAIL_FROM || 'alerts@pricehawk.io';
+
+    // Send personalized digests to each user
+    for (const user of users) {
+      try {
+        // Filter glitches based on user preferences
+        const userGlitches = filterGlitchesForUser(glitches, user.preferences);
+        
+        if (userGlitches.length === 0) {
+          continue;
+        }
+
+        const html = buildDigestEmail(userGlitches, user.email);
+        const text = buildDigestText(userGlitches);
+
+        const result = await resend.emails.send({
+          from: fromEmail,
+          to: user.email,
+          subject: `🦅 Daily Digest: ${userGlitches.length} Hot Glitches Today`,
+          html,
+          text,
+        });
+
+        if (result.error) {
+          stats.emailsFailed++;
+          stats.errors.push(`${user.email}: ${result.error.message}`);
+        } else {
+          stats.emailsSent++;
+          
+          // Update last digest sent timestamp
+          if (user.preferences) {
+            await db.userPreference.update({
+              where: { id: user.preferences.id },
+              data: { lastDigestSentAt: new Date() },
+            });
+          }
+        }
+      } catch (error) {
+        stats.emailsFailed++;
+        stats.errors.push(`${user.email}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    // Publish to beehiiv if enabled
+    if (isBeehiivEnabled()) {
+      try {
+        const postId = await publishDigest(glitches);
+        stats.beehiivPostId = postId;
+      } catch (error) {
+        stats.errors.push(`beehiiv: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    return stats;
+  } catch (error) {
+    stats.errors.push(`Fatal: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return stats;
+  }
+}
+
+/**
+ * Filter glitches based on user preferences
+ */
+function filterGlitchesForUser(
+  glitches: DigestGlitch[],
+  preferences: {
+    categories?: string[];
+    retailers?: string[];
+    minProfitMargin?: number | { toNumber: () => number };
+    minPrice?: number | { toNumber: () => number };
+    maxPrice?: number | { toNumber: () => number };
+  } | null
+): DigestGlitch[] {
+  if (!preferences) return glitches;
+
+  return glitches.filter(glitch => {
+    // Category filter
+    if (preferences.categories && preferences.categories.length > 0) {
+      // Skip if no category match (would need product category data)
+    }
+
+    // Retailer filter
+    if (preferences.retailers && preferences.retailers.length > 0) {
+      if (!preferences.retailers.includes(glitch.retailer.toLowerCase())) {
+        return false;
+      }
+    }
+
+    // Profit margin filter
+    const minMargin = preferences.minProfitMargin
+      ? typeof preferences.minProfitMargin === 'number'
+        ? preferences.minProfitMargin
+        : preferences.minProfitMargin.toNumber()
+      : 0;
+    if (glitch.savingsPercent < minMargin) {
+      return false;
+    }
+
+    // Price range filter
+    const minPrice = preferences.minPrice
+      ? typeof preferences.minPrice === 'number'
+        ? preferences.minPrice
+        : preferences.minPrice.toNumber()
+      : 0;
+    const maxPrice = preferences.maxPrice
+      ? typeof preferences.maxPrice === 'number'
+        ? preferences.maxPrice
+        : preferences.maxPrice.toNumber()
+      : 10000;
+    if (glitch.glitchPrice < minPrice || glitch.glitchPrice > maxPrice) {
+      return false;
+    }
+
+    return true;
+  });
 }
 
 async function triggerScrapeJobs(

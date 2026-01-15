@@ -1,5 +1,6 @@
 import { PricingAnomaly, ValidatedGlitch, ValidationResult } from '@/types';
 import { publishConfirmedGlitch } from '@/lib/clients/redis';
+import { isJinaEnabled, scoreGlitch } from '@/lib/ai/jina';
 
 // OpenRouter API configuration
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -261,6 +262,19 @@ export async function validateAndProcess(anomaly: PricingAnomaly): Promise<Valid
   // Save to database
   await saveValidatedGlitch(validatedGlitch);
 
+  // Optional: Enrich with Jina reranking scores
+  if (isJinaEnabled()) {
+    try {
+      const jinaScore = await scoreGlitch(validatedGlitch);
+      if (jinaScore !== null) {
+        await updateGlitchJinaScore(glitchId, jinaScore);
+      }
+    } catch (error) {
+      // Jina failures should not block the pipeline
+      console.error('Jina scoring failed (non-blocking):', error);
+    }
+  }
+
   // Publish to Redis for notification workers
   await publishConfirmedGlitch(glitchId, validatedGlitch as unknown as Record<string, unknown>);
 
@@ -327,5 +341,24 @@ async function saveValidatedGlitch(glitch: ValidatedGlitch): Promise<void> {
   } catch (error) {
     console.error('Error saving validated glitch:', error);
     throw error;
+  }
+}
+
+/**
+ * Update glitch with Jina reranking score
+ */
+async function updateGlitchJinaScore(glitchId: string, jinaScore: number): Promise<void> {
+  const { db } = await import('@/db');
+  
+  try {
+    await db.validatedGlitch.update({
+      where: { id: glitchId },
+      data: {
+        jinaScore,
+        jinaRankedAt: new Date(),
+      },
+    });
+  } catch (error) {
+    console.error('Error updating glitch Jina score:', error);
   }
 }

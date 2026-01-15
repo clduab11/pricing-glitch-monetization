@@ -51,19 +51,21 @@ model Subscription {
 }
 
 model UserPreference {
-  id              String   @id @default(uuid())
-  userId          String   @unique @map("user_id")
-  categories      String[] @default([])
-  retailers       String[] @default([])
-  minProfitMargin Int      @default(50) @map("min_profit_margin")
-  minPrice        Decimal  @default(0) @map("min_price") @db.Decimal(10, 2)
-  maxPrice        Decimal  @default(10000) @map("max_price") @db.Decimal(10, 2)
-  enableDiscord   Boolean  @default(true) @map("enable_discord")
-  enableEmail     Boolean  @default(true) @map("enable_email")
-  enableSMS       Boolean  @default(false) @map("enable_sms")
-  discordUserId   String?  @map("discord_user_id")
-  telegramChatId  String?  @map("telegram_chat_id")
-  webhookUrl      String?  @map("webhook_url")
+  id                String    @id @default(uuid())
+  userId            String    @unique @map("user_id")
+  categories        String[]  @default([])
+  retailers         String[]  @default([])
+  minProfitMargin   Int       @default(50) @map("min_profit_margin")
+  minPrice          Decimal   @default(0) @map("min_price") @db.Decimal(10, 2)
+  maxPrice          Decimal   @default(10000) @map("max_price") @db.Decimal(10, 2)
+  enableDiscord     Boolean   @default(true) @map("enable_discord")
+  enableEmail       Boolean   @default(true) @map("enable_email")
+  enableSMS         Boolean   @default(false) @map("enable_sms")
+  enableDailyDigest Boolean   @default(false) @map("enable_daily_digest")
+  lastDigestSentAt  DateTime? @map("last_digest_sent_at")
+  discordUserId     String?   @map("discord_user_id")
+  telegramChatId    String?   @map("telegram_chat_id")
+  webhookUrl        String?   @map("webhook_url")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -139,16 +141,18 @@ model PricingAnomaly {
 }
 
 model ValidatedGlitch {
-  id                String   @id @default(uuid())
-  anomalyId         String   @unique @map("anomaly_id")
-  productId         String   @map("product_id")
-  isGlitch          Boolean  @map("is_glitch")
+  id                String    @id @default(uuid())
+  anomalyId         String    @unique @map("anomaly_id")
+  productId         String    @map("product_id")
+  isGlitch          Boolean   @map("is_glitch")
   confidence        Int
   reasoning         String
-  glitchType        String   @map("glitch_type")
-  profitMargin      Decimal  @map("profit_margin") @db.Decimal(10, 2)
-  estimatedDuration String?  @map("estimated_duration")
-  validatedAt       DateTime @default(now()) @map("validated_at")
+  glitchType        String    @map("glitch_type")
+  profitMargin      Decimal   @map("profit_margin") @db.Decimal(10, 2)
+  estimatedDuration String?   @map("estimated_duration")
+  jinaScore         Decimal?  @map("jina_score") @db.Decimal(5, 4)
+  jinaRankedAt      DateTime? @map("jina_ranked_at")
+  validatedAt       DateTime  @default(now()) @map("validated_at")
 
   anomaly       PricingAnomaly @relation(fields: [anomalyId], references: [id], onDelete: Cascade)
   product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -160,6 +164,7 @@ model ValidatedGlitch {
   @@index([glitchType])
   @@index([profitMargin]) // For sorting by profit
   @@index([isGlitch, validatedAt]) // For feed queries
+  @@index([isGlitch, validatedAt, jinaScore]) // For ranked glitch queries
   @@map("validated_glitches")
 }
 
