@@ -1,391 +1,151 @@
-# Pricehawk
+# Pricehawk 🦅
 
-> **Enterprise-grade pricing error detection platform that discovers retail pricing glitches before they go viral, delivering instant notifications to subscribers.**
+### **The Enterprise-Grade Pricing Error Detection Platform**
+
+> **Catch retail pricing glitches before they go viral. Validate with AI. Profit instantly.**
 
 [![License: ELv2](https://img.shields.io/badge/License-ELv2%20%2B%20Commercial-blue)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org/)
+[![Status: Production](https://img.shields.io/badge/Status-Production_Ready-success)]()
+[![Stack](https://img.shields.io/badge/Stack-Next.js_14_%7C_Prisma_%7C_Redis-black)]()
+[![AI](https://img.shields.io/badge/AI-DeepSeek_V3-purple)]()
 
 ---
 
-## The Price Glitch Economy in 2026
+## 📉 The Opportunity
 
-The retail pricing error market has grown significantly. What was once an underground hobby has become a legitimate savings strategy embraced by millions:
+In the complex world of algorithmic pricing, retailers make mistakes every single day. Decimal errors, coupon stacking glitches, and currency conversion mishaps create instant arbitrage opportunities.
 
-- Major retailers honor pricing errors totaling significant amounts annually
-- Price glitch communities on Discord and Reddit have grown substantially since 2024
-- Major retailers increasingly honor pricing errors under certain thresholds to protect brand loyalty
-- Active glitch hunters report savings ranging from hundreds to several thousand dollars per year
+**The problem?** By the time you see a deal on social media, it's already dead.
+**The solution?** Pricehawk.
 
-### Why Pricing Errors Happen More Often Now
+| Category        | Typical Price | Glitch Price | Potential Profit |
+| --------------- | ------------- | ------------ | ---------------- |
+| 📺 **OLED TVs** | $2,499        | **$249.99**  | `$2,250`         |
+| 💻 **Laptops**  | $1,200        | **$120.00**  | `$1,080`         |
+| 🎧 **Audio**    | $350          | **$35.00**   | `$315`           |
+| 🏠 **Home**     | $600          | **$60.00**   | `$540`           |
 
-Modern e-commerce runs on complex, interconnected systems:
-
-- **Dynamic pricing algorithms** that update millions of prices hourly
-- **Multi-marketplace synchronization** between Amazon, Walmart, Target, and retailer sites
-- **Automated clearance systems** that occasionally drop decimals
-- **Third-party seller mishaps** on marketplace platforms
-- **Currency conversion errors** in global retail systems
-- **Promotional code stacking** that creates unintended deep discounts
-
-The result? Pricing errors occur **every single day** across major retailers. The difference between catching them and missing them is speed—most glitches are corrected within **15-45 minutes** of going viral.
-
-**Pricehawk gives you the edge.** Our AI-powered detection system identifies anomalies within seconds of occurrence and delivers alerts to subscribers before deals spread across social media.
+> _Pricehawk monitors 100+ retailers 24/7, detecting anomalies in seconds and delivering them to you before the public finds out._
 
 ---
 
-## What is Pricehawk?
+## ⚡ How It Works
 
-Pricehawk is a subscription-based platform that monitors 100+ retailer websites 24/7, using advanced AI to distinguish genuine pricing errors from legitimate sales. When a real glitch is detected, subscribers receive instant notifications via their preferred channels.
+Pricehawk combines distributed web scraping with Generative AI to filter out "fake" sales and identify **true pricing errors**.
 
-### Examples of Common Decimal-Error Pricing Patterns
+```mermaid
+graph LR
+    subgraph Detection ["👁️ Detection Layer"]
+        A[Scraper Engine] -->|Raw HTML| B(Price Parser)
+        B -->|Price Update| C{Anomaly?}
+    end
 
-| Item Category      | Typical List Price | Potential Glitch Price | Savings (Up To) |
-| ------------------ | ------------------ | ---------------------- | --------------- |
-| Premium TVs (65"+) | $1,500-$2,000      | $150-$200              | $1,300-$1,800   |
-| Wireless Earbuds   | $200-$300          | $20-$30                | $180-$270       |
-| Vacuum Cleaners    | $600-$800          | $60-$80                | $520-$720       |
-| Gaming Consoles    | $300-$400          | $30-$40                | $260-$360       |
-| Kitchen Appliances | $400-$500          | $40-$50                | $350-$450       |
+    subgraph Validation ["🧠 AI Validation Layer"]
+        C -->|Yes| D[Context Assembler]
+        D -->|History + Competitors| E[DeepSeek V3 Agent]
+        E -->|Confidence Score| F{Is Legitimate?}
+    end
 
-_These illustrate typical decimal-error pricing scenarios where a decimal point shifts one or two places. Actual outcomes vary significantly by retailer, timing, and individual circumstance. Not all pricing errors are honored—retailers have varying policies on order fulfillment. Users should verify current prices and policies before purchasing._
+    subgraph Delivery ["🚀 Delivery Layer"]
+        F -->|Yes (>80%)| G[Notification Router]
+        G -->|Instant| H[Discord / SMS]
+        G -->|Digest| I[Email / Twitter]
+    end
 
----
-
-## How It Works
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                     PRICEHAWK DETECTION PIPELINE                            │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-  │   Scraping   │────▶│    Redis     │────▶│  AI Validator │────▶│ Notification │
-  │   Engine     │     │   Stream     │     │  (DeepSeek)   │     │   Delivery   │
-  │              │     │              │     │               │     │              │
-  │ • Firecrawl  │     │ • Pub/Sub    │     │ • OpenRouter  │     │ • Discord    │
-  │ • Tavily     │     │ • Dedup      │     │ • Confidence  │     │ • Email      │
-  │ • Playwright │     │ • Buffer     │     │   Scoring     │     │ • SMS        │
-  └──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
-         │                    │                    │                    │
-         └────────────────────┴────────────────────┴────────────────────┘
-                                        │
-                         ┌──────────────▼──────────────┐
-                         │   PostgreSQL (Prisma ORM)    │
-                         │                              │
-                         │  • Products & Price History  │
-                         │  • Users & Subscriptions     │
-                         │  • Validated Glitches        │
-                         └──────────────────────────────┘
+    style Detection fill:#e1f5fe,stroke:#01579b
+    style Validation fill:#f3e5f5,stroke:#4a148c
+    style Delivery fill:#e8f5e9,stroke:#1b5e20
 ```
 
-### Detection Process
+---
 
-1. **Continuous Monitoring**: Our distributed scraping engine monitors 100+ retailers every 15-30 minutes
-2. **Anomaly Detection**: Z-score analysis flags prices that deviate significantly from historical averages
-3. **AI Validation**: DeepSeek V3 analyzes each anomaly to filter false positives (clearance, sales, etc.)
-4. **Instant Delivery**: Confirmed glitches are pushed to subscribers in under 2 minutes
+## 🏗️ Technical Architecture
 
-### Detection Criteria
+Built for speed, reliability, and scale. Pricehawk operates on an event-driven architecture designed to handle thousands of concurrent price checks.
 
-| Error Type           | Detection Method                  | Confidence |
-| -------------------- | --------------------------------- | ---------- |
-| Decimal Errors       | Price ratio < 0.01 or > 100       | 95%+       |
-| Extreme Discounts    | >70% off with Z-score > 3         | 80-90%     |
-| Historical Anomalies | 3+ standard deviations below mean | 75-85%     |
-| Coupon Stacking      | Multiple discount detection       | 65-75%     |
+### Core Stack
+
+- **⚡ Framework**: [Next.js 14](https://nextjs.org) (App Router)
+- **🗄️ Database**: [PostgreSQL](https://postgresql.org) + [Prisma](https://prisma.io)
+- **📨 Event Bus**: [Redis](https://redis.io) Streams + [BullMQ](https://bullmq.io)
+- **🧠 Intelligence**: [DeepSeek V3](https://deepseek.com) via OpenRouter
+- **🕷️ Scraping**: [Firecrawl](https://firecrawl.dev) + [Playwright](https://playwright.dev)
+- **🐳 DevOps**: Docker & Railway
+
+### Capabilities
+
+- **Affiliate Monetization**: Automatically injects affiliate tags (Amazon, etc.) into shared links.
+- **Deal Lifecycle**: Auto-expires deals when prices return to normal.
+- **Multi-Channel**: Delivers to Discord, Telegram, Twitter/X, and SMS simultaneously.
 
 ---
 
-## Subscription Tiers
+## 🚀 Getting Started
 
-### Current Pricing
+Deploying Pricehawk is simple with our Docker compliance.
 
-| Feature                 | Free          | Starter          | Pro               | Elite             |
-| ----------------------- | ------------- | ---------------- | ----------------- | ----------------- |
-| **Price**               | $0/mo         | $5/mo            | $15/mo            | $50/mo            |
-| **Annual Price**        | -             | $48/yr (20% off) | $144/yr (20% off) | $480/yr (20% off) |
-| **Notification Delay**  | 7 days        | 24 hours         | < 5 minutes       | Instant           |
-| **Deals Per Week**      | 5             | Unlimited        | Unlimited         | Unlimited         |
-| **Email Notifications** | Weekly Digest | Daily            | Real-time         | Real-time         |
-| **Discord Access**      | -             | Yes              | Yes               | Yes               |
-| **SMS/Telegram**        | -             | -                | Yes               | Yes               |
-| **Advanced Filters**    | -             | Basic            | Full              | Full              |
-| **Historical Data**     | -             | -                | 30 days           | 90 days           |
-| **API Access**          | -             | -                | -                 | 1,000 req/day     |
-| **Webhooks**            | -             | -                | -                 | Yes               |
-| **Priority Support**    | -             | -                | -                 | Yes               |
+### 1. Requirements
 
-### Launch Promotion (Through Q1 2026)
+- Docker & Docker Compose
+- API Keys (OpenRouter, Twitter, Telegram, etc.)
 
-- **50% off first 3 months** for early subscribers
-- **Free upgrade to Pro** for annual Starter subscribers
-- Founding members get **lifetime 20% discount** on all tiers
-
----
-
-## Technology Stack
-
-| Layer           | Technology                     | Purpose                          |
-| --------------- | ------------------------------ | -------------------------------- |
-| **Framework**   | Next.js 14 (App Router)        | Full-stack React framework       |
-| **Language**    | TypeScript 5.7 (strict)        | Type-safe development            |
-| **Database**    | PostgreSQL 15 + Prisma 7       | Data persistence                 |
-| **Queue/Cache** | Redis 7 + BullMQ               | Event streaming & job queue      |
-| **Auth**        | Clerk                          | Authentication & user management |
-| **Payments**    | Stripe Billing                 | Subscription management          |
-| **Scraping**    | Firecrawl, Tavily, Playwright  | Multi-provider web scraping      |
-| **AI**          | OpenRouter (DeepSeek V3)       | Anomaly validation               |
-| **Email**       | Resend                         | Transactional email              |
-| **SMS**         | Twilio                         | Text notifications               |
-| **Social**      | Discord.js, Facebook Graph API | Community notifications          |
-
----
-
-## Q1 2026 Release Roadmap
-
-### Phase 1: Core Platform (January 2026) ✅
-
-- [x] Multi-provider scraping engine (Firecrawl, Tavily, Playwright)
-- [x] AI validation pipeline with DeepSeek V3
-- [x] PostgreSQL database with Prisma ORM
-- [x] Redis Streams event-driven architecture
-- [x] Stripe subscription billing integration
-- [x] Clerk authentication system
-- [x] Basic notification system (Email, Discord)
-
-### Phase 2: Notification Expansion (February 2026)
-
-- [ ] SMS notifications via Twilio
-- [ ] Telegram bot integration
-- [ ] Facebook Page auto-posting
-- [ ] Webhook delivery for Elite tier
-- [ ] Mobile push notifications (PWA)
-- [ ] Notification preferences dashboard
-
-### Phase 3: User Experience (February-March 2026)
-
-- [ ] Public marketing website
-- [ ] User dashboard redesign
-- [ ] Real-time deal feed
-- [ ] Historical deal browser
-- [ ] Category and retailer filtering UI
-- [ ] Price drop alerts (watchlist)
-
-### Phase 4: Scale & Launch (March 2026)
-
-- [ ] Retailer coverage expansion to 150+ sites
-- [ ] Worker horizontal scaling
-- [ ] Performance optimization (< 90s end-to-end)
-- [ ] Admin dashboard for operations
-- [ ] Public API documentation
-- [ ] Beta launch to founding members
-- [ ] **Public launch: March 31, 2026**
-
-### Post-Launch Priorities (Q2 2026)
-
-- Mobile app (React Native)
-- Browser extension for in-page price monitoring
-- Community features (deal ratings, comments)
-- Reseller analytics dashboard
-- International retailer support
-- Enterprise tier with custom integrations
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- PostgreSQL 15+
-- Redis 7+
-- API keys for external services (see `.env.example`)
-
-### Quick Start
+### 2. Run with One Command
 
 ```bash
 # Clone the repository
 git clone https://github.com/clduab11/pricehawk.git
-cd pricehawk
 
-# Install dependencies
-npm install
-
-# Set up environment
-cp .env.example .env
-# Edit .env with your API keys
-
-# Initialize database
-npm run prisma:generate
-npx prisma migrate dev
-
-# Start development server
-npm run dev
-
-# In separate terminals, start workers:
-npm run worker           # Scraping orchestrator
-npm run worker:validate  # AI validation
-npm run worker:notify    # Notification delivery
+# Start the full stack (App + Workers + DB + Redis)
+docker compose up --build -d
 ```
 
-### Docker Deployment
+### 3. Access the Dashboard
 
-```bash
-# Start all services
-docker compose up --build
+Visit `http://localhost:3000` to access the admin console and view live pricing feeds.
 
-# Start specific services
-docker compose up app postgres redis
+---
 
-# View logs
-docker compose logs -f app
+## 💰 Business Model
+
+Pricehawk is designed as a SaaS platform with clear monetization channels:
+
+1.  **Subscriptions**: Tiered access (Starter, Pro, Elite) for faster alerts.
+2.  **Affiliate Revenue**: Automatic tag injection on all shared deal links.
+3.  **API Access**: Enterprise data stream for high-volume resellers.
+
+```mermaid
+pie title Revenue Streams
+    "SaaS Subscriptions" : 60
+    "Affiliate Commissions" : 25
+    "API Licensing" : 10
+    "Data Reselling" : 5
 ```
 
 ---
 
-## Documentation
+## 🗺️ Roadmap
 
-### Architecture & Design
-
-- [System Architecture](docs/architecture/architecture.md) - High-level system design
-- [Scraping Engine](docs/architecture/01-scraping-engine.md) - Distributed scraping architecture
-- [Analysis Engine](docs/architecture/02-analysis-engine.md) - ML-based error detection
-- [Notification System](docs/architecture/03-notification-system.md) - Multi-channel delivery
-- [API Layer](docs/architecture/04-api-layer.md) - REST API endpoints
-
-### Integration Guides
-
-- [Subscription Management](docs/architecture/05-subscription-management.md) - Stripe integration
-- [Frontend Architecture](docs/architecture/06-frontend-apps.md) - Next.js app structure
-- [Admin Dashboard](docs/architecture/07-admin-dashboard.md) - Operations interface
-- [Database Schema](docs/architecture/08-database-schema.md) - PostgreSQL design
-- [Jina.ai Integration](docs/architecture/09-jina-integration.md) - AI enrichment layer
-
-### Market Context
-
-- [Competitive Landscape](docs/architecture/10-competitive-landscape.md) - Market positioning and competitors
-
-### Operations
-
-- [Installation Guide](docs/guides/installation.md)
-- [Development Setup](docs/guides/development.md)
-- [Environment Variables](docs/guides/environment.md)
-- [Deployment Guide](docs/guides/deployment.md)
-- [Monitoring & Alerting](docs/guides/monitoring.md)
+- [x] **Phase 1: Foundation** - Scrapers, DB, Basic Auth
+- [x] **Phase 2: Intelligence** - AI Validation, Redis Pipeline
+- [x] **Phase 3: Expansion** - Twitter, Telegram, & Affiliate Integration
+- [ ] **Phase 4: Mobile** - React Native App & Push Notifications
+- [ ] **Phase 5: Global** - International Retailer Support
 
 ---
 
-## API Endpoints
+## 🤝 Contributing
 
-| Endpoint               | Method | Description             | Auth Required |
-| ---------------------- | ------ | ----------------------- | ------------- |
-| `/api/health`          | GET    | System health check     | No            |
-| `/api/scrape`          | POST   | Trigger URL scraping    | Admin         |
-| `/api/detect`          | POST   | Run anomaly detection   | Admin         |
-| `/api/notify`          | POST   | Send test notification  | Admin         |
-| `/api/checkout`        | POST   | Create checkout session | Yes           |
-| `/api/billing/portal`  | POST   | Billing portal redirect | Yes           |
-| `/api/webhooks/stripe` | POST   | Stripe webhook handler  | Signature     |
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
----
+### License
 
-## Why Price Glitch Hunting Works in 2026
+Pricehawk is dual-licensed:
 
-### Retailers Honor Most Errors
-
-Modern retail operates on thin margins and fierce competition. Canceling orders damages:
-
-- **Brand reputation** in an era of viral social media
-- **Customer lifetime value** (losing a customer costs more than honoring a deal)
-- **Marketplace seller ratings** which directly impact visibility
-
-As a result, retailers increasingly honor pricing errors under a certain threshold rather than face backlash.
-
-### The Speed Advantage
-
-Price glitches typically follow this lifecycle:
-
-1. **0-5 minutes**: Error occurs, few notice
-2. **5-15 minutes**: Early discoverers place orders
-3. **15-30 minutes**: Spread across Discord/Reddit communities
-4. **30-60 minutes**: Goes viral, retailer notices
-5. **60+ minutes**: Price corrected, orders may be canceled
-
-**Pricehawk subscribers get alerts in Phase 1-2**, while public communities are still in Phase 3-4.
-
-### Risk-Reward Profile
-
-- **Best case**: Order honored, save 80-95% on item
-- **Typical case**: Some orders honored, some cancelled
-- **Worst case**: Order cancelled, full refund, no loss
-
-The asymmetric upside makes price glitch hunting a legitimate savings strategy for millions of consumers.
+- **ELv2**: Free for personal/non-commercial use.
+- **Commercial**: Required for business use or resale.
 
 ---
 
-## Contributing
-
-We welcome contributions from the community. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Development Workflow
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run linting (`npm run lint`)
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
-
----
-
-## License
-
-This software is dual-licensed:
-
-**Elastic License 2.0 (ELv2)** - For non-commercial use, personal projects, educational purposes, and internal business use.
-
-**Commercial License** - Required for:
-
-- Competing pricing error detection or deal alert services
-- Managed/hosted service offerings
-- Reselling the software or its output
-- Enterprise deployments (100+ users)
-- White-labeling or rebranding
-
-For commercial licensing inquiries, contact **info@parallax-ai.app** or visit [parallax-ai.app](https://parallax-ai.app).
-
-See [LICENSE](LICENSE) for full terms.
-
----
-
-## Legal Disclaimer
-
-Pricehawk is an informational service that monitors publicly available pricing data. Users are responsible for:
-
-- Verifying deal accuracy before purchasing
-- Understanding retailer policies regarding pricing errors
-- Complying with retailer terms of service
-- Making informed purchasing decisions
-
-We make no guarantees about:
-
-- Order fulfillment by retailers
-- Accuracy of detected pricing errors
-- Availability of deals at time of notification
-
-Pricehawk is not affiliated with any retailers mentioned. All trademarks belong to their respective owners.
-
----
-
-## Contact
-
-- **GitHub**: [@clduab11](https://github.com/clduab11)
-- **Company**: [Parallax Analytics](https://parallax-ai.app)
-- **Support**: support@pricehawk.io (coming soon)
-
----
-
-**Discover pricing errors before they go viral. Join Pricehawk.**
+<div align="center">
+  <sub>Built with 🦅 by Parallax Analytics</sub>
+</div>
