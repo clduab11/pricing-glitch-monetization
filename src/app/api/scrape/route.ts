@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scrapeAndDetect, scrapeUrl } from '@/lib/scraping/firecrawl';
 import { z } from 'zod';
+import { validateProductUrl, URLValidationError } from '@/lib/validators/url-validator';
 
 // Request validation schema
 const ScrapeRequestSchema = z.object({
@@ -30,6 +31,23 @@ export async function POST(request: NextRequest) {
     }
 
     const { url, extract_only } = parseResult.data;
+
+    // Validate URL against whitelist (SSRF prevention)
+    try {
+      validateProductUrl(url);
+    } catch (error) {
+      if (error instanceof URLValidationError) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'URL validation failed',
+            details: error.message,
+          },
+          { status: 400 }
+        );
+      }
+      throw error;
+    }
 
     // If extract_only, just scrape and return raw data
     if (extract_only) {

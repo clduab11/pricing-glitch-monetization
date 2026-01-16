@@ -145,6 +145,7 @@ model PricingAnomaly {
   @@index([productId])
   @@index([status, detectedAt]) // For pending anomaly queries
   @@index([discountPercentage]) // For high-discount queries
+  @@index([productId, detectedAt], name: "idx_anomaly_product_detected") // For product-specific historical queries
   @@map("anomalies")
 }
 

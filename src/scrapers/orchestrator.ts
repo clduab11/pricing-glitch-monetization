@@ -8,6 +8,7 @@ import { ScraperConfig } from './types.js';
 import { PricingAnomaly, Product, ProductData } from '../types/index.js';
 import { detectAnomaly } from '../lib/analysis/detection.js';
 import { publishAnomaly } from '../lib/clients/redis.js';
+import { validateProductUrl } from '../lib/validators/url-validator.js';
 
 interface RequestJobData {
   retailer: string;
@@ -48,8 +49,11 @@ export class ScrapingOrchestrator {
       'scraping-jobs',
       async (job: { data: RequestJobData; id?: string }) => {
         const { retailer, category, url } = job.data as RequestJobData;
-        
+
         try {
+          // Validate URL before scraping (SSRF prevention)
+          validateProductUrl(url);
+
           const config = this.retailers.find(r => r.retailer === retailer);
           if (!config) {
              throw new Error(`Unknown retailer: ${retailer}`);

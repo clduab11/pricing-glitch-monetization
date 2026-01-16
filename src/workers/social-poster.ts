@@ -22,18 +22,39 @@ interface SocialPostJob {
 }
 
 const worker = new Worker(QUEUE_NAME, async (job: Job<SocialPostJob>) => {
-    console.log(`Processing job ${job.id}: ${job.name}`);
-    
-    if (job.name === 'hourly-digest' || job.data.jobType === 'hourly-digest') {
-        await processHourlyDigest();
-    } else if (job.name === 'post-single' && job.data.glitchId) {
-        await processSingleGlitch(job.data.glitchId);
-    }
+    try {
+        console.log(`[social-poster] Processing job ${job.id}: ${job.name}, jobType: ${job.data.jobType}`);
 
+        if (job.name === 'hourly-digest' || job.data.jobType === 'hourly-digest') {
+            await processHourlyDigest();
+        } else if (job.name === 'post-single' && job.data.glitchId) {
+            await processSingleGlitch(job.data.glitchId);
+        }
+
+        console.log(`[social-poster] Job ${job.id} completed successfully`);
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorStack = error instanceof Error ? error.stack : undefined;
+
+        console.error(`[social-poster] Job ${job.id} failed:`, {
+            error: errorMessage,
+            stack: errorStack,
+            jobName: job.name,
+            jobData: job.data,
+            attemptsMade: job.attemptsMade,
+        });
+
+        // Re-throw to mark job as failed and enable BullMQ retry mechanism
+        throw error;
+    }
 }, { connection });
 
 worker.on('failed', (job, err) => {
-    console.error(`Job ${job?.id} failed with error ${err.message}`);
+    console.error(`[social-poster] Job ${job?.id} failed with error: ${err.message}`);
+});
+
+worker.on('error', (err) => {
+    console.error('[social-poster] Worker error:', err);
 });
 
 async function processHourlyDigest() {

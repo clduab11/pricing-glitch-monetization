@@ -21,15 +21,40 @@ interface VerifyJobData {
 }
 
 const worker = new Worker(QUEUE_NAME, async (job: Job<VerifyJobData>) => {
-    console.log(`Verifying deal ${job.data.glitchId}...`);
+    try {
+        console.log(`[deal-verifier] Processing job ${job.id}: ${job.name}, glitchId: ${job.data.glitchId}`);
 
-    if (job.name === 'check-expirations') {
-        await scheduleActiveDeals();
-    } else if (job.name === 'verify-glitch') {
-        await verifyGlitch(job.data);
+        if (job.name === 'check-expirations') {
+            await scheduleActiveDeals();
+        } else if (job.name === 'verify-glitch') {
+            await verifyGlitch(job.data);
+        }
+
+        console.log(`[deal-verifier] Job ${job.id} completed successfully`);
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorStack = error instanceof Error ? error.stack : undefined;
+
+        console.error(`[deal-verifier] Job ${job.id} failed:`, {
+            error: errorMessage,
+            stack: errorStack,
+            jobName: job.name,
+            jobData: job.data,
+            attemptsMade: job.attemptsMade,
+        });
+
+        // Re-throw to mark job as failed and enable BullMQ retry mechanism
+        throw error;
     }
-
 }, { connection });
+
+worker.on('failed', (job, err) => {
+    console.error(`[deal-verifier] Job ${job?.id} failed with error: ${err.message}`);
+});
+
+worker.on('error', (err) => {
+    console.error('[deal-verifier] Worker error:', err);
+});
 
 async function scheduleActiveDeals() {
     // Find active glitches older than 2 hours (give them time to live)
