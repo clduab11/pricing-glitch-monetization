@@ -158,6 +158,57 @@ describe('Detection Module', () => {
       expect(result.confidence).toBe(95);
     });
 
+    it('should detect decimal error for ratio < 0.1 (significant drop)', () => {
+      const result = detectAnomaly(5, 100, [100, 100, 100]);
+      
+      expect(result.is_anomaly).toBe(true);
+      expect(result.anomaly_type).toBe('decimal_error');
+      expect(result.confidence).toBe(95);
+    });
+
+    it('should detect decimal error for ratio > 10 (significant hike)', () => {
+      const result = detectAnomaly(1100, 100, [100, 100, 100]);
+      
+      expect(result.is_anomaly).toBe(true);
+      expect(result.anomaly_type).toBe('decimal_error');
+      expect(result.confidence).toBe(95);
+    });
+
+    it('should NOT detect decimal error for ratio between 0.1 and 10', () => {
+      // Test ratio = 0.2 (within acceptable range)
+      const result1 = detectAnomaly(20, 100, [100, 100, 100]);
+      // Test ratio = 5 (within acceptable range)
+      const result2 = detectAnomaly(500, 100, [100, 100, 100]);
+      
+      // These might still be anomalies due to percentage drop, but NOT decimal errors
+      if (result1.anomaly_type) {
+        expect(result1.anomaly_type).not.toBe('decimal_error');
+      }
+      if (result2.anomaly_type) {
+        expect(result2.anomaly_type).not.toBe('decimal_error');
+      }
+    });
+
+    it('should only apply Z-score detection with >= 30 samples', () => {
+      // Create 29 samples with variation (below threshold)
+      const smallSample = Array(29).fill(0).map((_, i) => 100 + (i % 5));
+      const result1 = detectAnomaly(50, 100, smallSample);
+      
+      // Z-score should be calculated
+      expect(result1.z_score).toBeGreaterThan(0);
+      // Should not be flagged as z_score anomaly type (could be percentage_drop or mad_score)
+      expect(result1.anomaly_type).not.toBe('z_score');
+      
+      // Create 30 samples with variation (at threshold)
+      const largeSample = Array(30).fill(0).map((_, i) => 100 + (i % 5));
+      const result2 = detectAnomaly(50, 100, largeSample);
+      
+      // With 30+ samples and a significant drop, Z-score should now be eligible
+      expect(result2.z_score).toBeGreaterThan(0);
+      expect(result2.is_anomaly).toBe(true);
+      // Could be z_score, percentage_drop, or mad_score - just verify anomaly is detected
+    });
+
     it('should detect MAD score anomaly with sufficient data', () => {
       const historicalPrices = [100, 101, 100, 99, 100, 101, 100, 99, 100, 101, 100];
       const result = detectAnomaly(50, 100, historicalPrices);

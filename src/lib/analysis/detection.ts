@@ -173,8 +173,11 @@ export function isOutsideAdjustedIQR(
 
 /**
  * Detect pricing anomalies using Z-score, MAD, IQR, and percentage drop
- * Triggers: Price Drop > threshold OR Z-score > 3 OR MAD score > threshold OR Decimal error ratio < 1%
+ * Triggers: Price Drop > threshold OR Z-score > 3 (with >= 30 samples) OR MAD score > threshold OR Decimal error (ratio < 0.1 or > 10)
  * Now accepts category and timestamp options for context-aware detection
+ * 
+ * Z-score detection requires at least 30 historical prices for statistical reliability.
+ * Decimal error detection flags both significant drops (ratio < 0.1) and hikes (ratio > 10).
  */
 export function detectAnomaly(
   currentPrice: number,
@@ -210,9 +213,9 @@ export function detectAnomaly(
 
   // Anomaly detection logic with category-specific thresholds
   const isPercentageDrop = discountPercentage > thresholds.dropThreshold;
-  const isZScoreAnomaly = zScore > 3;
+  const isZScoreAnomaly = historicalPrices.length >= 30 && zScore > 3;
   const isMadAnomaly = madScore > thresholds.madThreshold;
-  const isDecimalError = originalPrice !== null && originalPrice > 0 && currentPrice / originalPrice < 0.01;
+  const isDecimalError = originalPrice !== null && originalPrice > 0 && (currentPrice / originalPrice < 0.1 || currentPrice / originalPrice > 10);
 
   // Include both MAD and Z-score for backward compatibility
   const isAnomaly = isPercentageDrop || isMadAnomaly || isZScoreAnomaly || isDecimalError;
