@@ -10,7 +10,7 @@
  */
 
 import { z } from 'zod';
-import { ProductData, Product } from '@/types';
+import { ProductData } from '@/types';
 
 // ============================================================================
 // Tool Schema Definitions
@@ -1126,6 +1126,21 @@ function zodFieldToJsonSchema(field: z.ZodTypeAny): Record<string, unknown> {
   if (field instanceof z.ZodObject) {
     return zodToJsonSchema(field);
   }
+  if (field instanceof z.ZodRecord) {
+    return {
+      type: 'object',
+      additionalProperties: zodFieldToJsonSchema(field.valueType),
+      description
+    };
+  }
+  if (field instanceof z.ZodAny) {
+    // ZodAny accepts any value - no type constraint
+    return { description };
+  }
+  if (field instanceof z.ZodUnknown) {
+    // ZodUnknown accepts any value - no type constraint
+    return { description };
+  }
 
   return { type: 'string', description };
 }
@@ -1335,6 +1350,16 @@ export class MandatoryToolUseError extends Error {
 }
 
 /**
+ * Error thrown when attempting to use a disabled tool
+ */
+export class ToolNotEnabledError extends Error {
+  constructor(toolName: string, iteration: number) {
+    super(`Tool "${toolName}" is not enabled at iteration ${iteration}`);
+    this.name = 'ToolNotEnabledError';
+  }
+}
+
+/**
  * Agent execution state
  */
 export interface AgentState {
@@ -1431,6 +1456,13 @@ export class ScrapingAgent {
       this.state.isComplete = true;
       this.state.error = `Max iterations (${this.config.maxIterations}) exceeded`;
       return { toolCalls: [], shouldContinue: false };
+    }
+
+    // Validate that all requested tools are enabled
+    for (const call of toolCalls) {
+      if (!this.config.enabledTools.includes(call.name)) {
+        throw new ToolNotEnabledError(call.name, this.state.iteration);
+      }
     }
 
     // Execute all tool calls
