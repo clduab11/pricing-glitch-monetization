@@ -116,7 +116,7 @@ describe('Detection Module', () => {
 
     it('should accept custom multiplier parameter', () => {
       const historicalPrices = [95, 98, 99, 100, 100, 100, 101, 102, 103, 105];
-      const borderlinePrice = 95;
+      const borderlinePrice = 96;
 
       // With higher multiplier (wider bounds), should not flag
       const resultHigh = isOutsideAdjustedIQR(borderlinePrice, historicalPrices, 3.0);
