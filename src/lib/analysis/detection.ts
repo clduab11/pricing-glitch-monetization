@@ -1,5 +1,5 @@
 import type { DetectResult } from '@/types';
-import { getThresholdsForCategory, analyzeTemporalContext, type CategoryThresholds, type TemporalContext } from './thresholds';
+import { getThresholdsForCategory, resolveCategoryKey, analyzeTemporalContext, type CategoryThresholds, type TemporalContext } from './thresholds';
 
 export interface DetectAnomalyOptions {
   category?: string | null;
@@ -184,8 +184,11 @@ export function detectAnomaly(
 ): DetectResult {
   const { category, timestamp } = options;
 
+  // Resolve category to the actual key that will be used
+  const categoryKey = resolveCategoryKey(category);
+
   // Get category-specific thresholds
-  const thresholds = getThresholdsForCategory(category);
+  const thresholds = getThresholdsForCategory(categoryKey);
 
   // Analyze temporal context
   const temporalContext = analyzeTemporalContext(timestamp);
@@ -259,7 +262,7 @@ export function detectAnomaly(
     confidence,
     mad_score: madScore,
     iqr_flag: iqrFlag,
-    category_applied: category?.toLowerCase().trim() ?? 'default',
+    category_applied: categoryKey,
     temporal_context: {
       is_maintenance_window: temporalContext.isMaintenanceWindow,
       hour_of_day: temporalContext.hourOfDay,

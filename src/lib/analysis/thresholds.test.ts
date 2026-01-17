@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   CATEGORY_THRESHOLDS,
   getThresholdsForCategory,
+  resolveCategoryKey,
   analyzeTemporalContext,
 } from './thresholds';
 import { detectAnomaly } from './detection';
@@ -58,6 +59,39 @@ describe('Category Thresholds', () => {
   it('should handle category with whitespace', () => {
     expect(getThresholdsForCategory('  electronics  ')).toEqual(CATEGORY_THRESHOLDS.electronics);
     expect(getThresholdsForCategory('\telectronics\n')).toEqual(CATEGORY_THRESHOLDS.electronics);
+  });
+});
+
+describe('resolveCategoryKey', () => {
+  it('should return valid category key for known categories', () => {
+    expect(resolveCategoryKey('electronics')).toBe('electronics');
+    expect(resolveCategoryKey('fashion')).toBe('fashion');
+    expect(resolveCategoryKey('grocery')).toBe('grocery');
+  });
+
+  it('should return "default" for unknown categories', () => {
+    expect(resolveCategoryKey('unknownCategory')).toBe('default');
+    expect(resolveCategoryKey('invalid')).toBe('default');
+  });
+
+  it('should return "default" for null or undefined', () => {
+    expect(resolveCategoryKey(null)).toBe('default');
+    expect(resolveCategoryKey(undefined)).toBe('default');
+  });
+
+  it('should normalize category case before resolving', () => {
+    expect(resolveCategoryKey('ELECTRONICS')).toBe('electronics');
+    expect(resolveCategoryKey('Fashion')).toBe('fashion');
+    expect(resolveCategoryKey('GROcery')).toBe('grocery');
+  });
+
+  it('should trim whitespace before resolving', () => {
+    expect(resolveCategoryKey('  electronics  ')).toBe('electronics');
+    expect(resolveCategoryKey('\tfashion\n')).toBe('fashion');
+  });
+
+  it('should return "default" for trimmed unknown categories', () => {
+    expect(resolveCategoryKey('  UNKNOWN  ')).toBe('default');
   });
 });
 

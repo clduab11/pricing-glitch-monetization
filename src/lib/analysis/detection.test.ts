@@ -297,6 +297,16 @@ describe('Detection Module', () => {
       expect(result.category_applied).toBe('electronics');
       expect(result.temporal_context.is_maintenance_window).toBe(true);
     });
+
+    it('should resolve unknown category to default', () => {
+      const result = detectAnomaly(50, 100, [100, 100, 100], { category: 'unknownCategory' });
+
+      expect(result.category_applied).toBe('default');
+      expect(result.thresholds_used.mad_threshold).toBe(3.0);
+      expect(result.thresholds_used.drop_threshold).toBe(50);
+      expect(result.thresholds_used.iqr_multiplier).toBe(2.2);
+      expect(result.thresholds_used.min_confidence_boost).toBe(0);
+    });
   });
 
   describe('Integration Tests', () => {
