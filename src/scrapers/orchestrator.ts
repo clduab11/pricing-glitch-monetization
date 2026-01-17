@@ -221,7 +221,10 @@ export class ScrapingOrchestrator {
 
     if (!Number.isFinite(currentPrice) || currentPrice <= 0) return;
 
-    const detection = detectAnomaly(currentPrice, originalPrice, historicalPrices);
+    const detection = detectAnomaly(currentPrice, originalPrice, historicalPrices, {
+      category: dbProduct.category ?? category,
+      timestamp: dbProduct.scrapedAt,
+    });
     if (!detection.is_anomaly || !detection.anomaly_type) return;
 
     // Lightweight dedupe: skip if we already have a pending anomaly recently

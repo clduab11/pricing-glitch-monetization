@@ -1,4 +1,10 @@
 import type { DetectResult } from '@/types';
+import { getThresholdsForCategory, analyzeTemporalContext, type CategoryThresholds, type TemporalContext } from './thresholds';
+
+export interface DetectAnomalyOptions {
+  category?: string | null;
+  timestamp?: Date | null;
+}
 
 /**
  * Calculate median of an array
@@ -124,53 +130,66 @@ export function calculateDoubleMadScore(currentPrice: number, historicalPrices: 
 /**
  * Check if price is outside adjusted IQR bounds using medcouple correction
  * Adjusted for right-skewed distributions (retail prices)
- * Lower Fence = Q1 - 2.2 × e^(-4×MC) × IQR
- * Upper Fence = Q3 + 2.2 × e^(3×MC) × IQR
+ * Lower Fence = Q1 - multiplier × e^(-4×MC) × IQR
+ * Upper Fence = Q3 + multiplier × e^(3×MC) × IQR
  * Returns false if insufficient data (< 10 samples)
  */
-export function isOutsideAdjustedIQR(currentPrice: number, historicalPrices: number[]): boolean {
+export function isOutsideAdjustedIQR(
+  currentPrice: number,
+  historicalPrices: number[],
+  multiplier: number = 2.2  // Configurable, default: Hoaglin & Iglewicz tuned for production
+): boolean {
   // Require at least 10 samples for robust IQR calculation
   if (historicalPrices.length < 10) return false;
-  
+
   const sorted = [...historicalPrices].sort((a, b) => a - b);
   const n = sorted.length;
-  
+
   // Calculate quartiles using linear interpolation (R type 7 - default in R and NumPy)
   const q1Index = (n - 1) * 0.25;
   const q3Index = (n - 1) * 0.75;
-  
+
   const q1Lower = Math.floor(q1Index);
   const q1Upper = Math.ceil(q1Index);
   const q1 = sorted[q1Lower] + (sorted[q1Upper] - sorted[q1Lower]) * (q1Index - q1Lower);
-  
+
   const q3Lower = Math.floor(q3Index);
   const q3Upper = Math.ceil(q3Index);
   const q3 = sorted[q3Lower] + (sorted[q3Upper] - sorted[q3Lower]) * (q3Index - q3Lower);
-  
+
   const iqr = q3 - q1;
-  
+
   if (iqr === 0) return false;
-  
+
   // Calculate medcouple for skewness adjustment
   const mc = calculateMedcouple(sorted);
-  
+
   // Calculate adjusted fences for right-skewed distributions
-  const multiplier = 2.2; // Hoaglin & Iglewicz tuned for production
   const lowerFence = q1 - multiplier * Math.exp(-4 * mc) * iqr;
   const upperFence = q3 + multiplier * Math.exp(3 * mc) * iqr;
-  
+
   return currentPrice < lowerFence || currentPrice > upperFence;
 }
 
 /**
  * Detect pricing anomalies using Z-score, MAD, IQR, and percentage drop
- * Triggers: Price Drop > 50% OR Z-score > 3 OR MAD score > 3 OR Decimal error ratio < 1%
+ * Triggers: Price Drop > threshold OR Z-score > 3 OR MAD score > threshold OR Decimal error ratio < 1%
+ * Now accepts category and timestamp options for context-aware detection
  */
 export function detectAnomaly(
   currentPrice: number,
   originalPrice: number | null,
-  historicalPrices: number[] = []
+  historicalPrices: number[] = [],
+  options: DetectAnomalyOptions = {}
 ): DetectResult {
+  const { category, timestamp } = options;
+
+  // Get category-specific thresholds
+  const thresholds = getThresholdsForCategory(category);
+
+  // Analyze temporal context
+  const temporalContext = analyzeTemporalContext(timestamp);
+
   // Calculate discount percentage if original price available
   let discountPercentage = 0;
   if (originalPrice && originalPrice > 0) {
@@ -179,17 +198,17 @@ export function detectAnomaly(
 
   // Calculate Z-score from historical data (keep for backward compatibility)
   const zScore = calculateZScore(currentPrice, historicalPrices);
-  
+
   // Calculate MAD score using Double MAD
   const madScore = calculateDoubleMadScore(currentPrice, historicalPrices);
-  
-  // Calculate IQR flag using adjusted boxplot
-  const iqrFlag = isOutsideAdjustedIQR(currentPrice, historicalPrices);
 
-  // Anomaly detection logic
-  const isPercentageDrop = discountPercentage > 50;
+  // Calculate IQR flag using adjusted boxplot with category-specific multiplier
+  const iqrFlag = isOutsideAdjustedIQR(currentPrice, historicalPrices, thresholds.iqrMultiplier);
+
+  // Anomaly detection logic with category-specific thresholds
+  const isPercentageDrop = discountPercentage > thresholds.dropThreshold;
   const isZScoreAnomaly = zScore > 3;
-  const isMadAnomaly = madScore > 3.0; // Primary statistical signal
+  const isMadAnomaly = madScore > thresholds.madThreshold;
   const isDecimalError = originalPrice !== null && originalPrice > 0 && currentPrice / originalPrice < 0.01;
 
   // Include both MAD and Z-score for backward compatibility
@@ -227,14 +246,29 @@ export function detectAnomaly(
     confidence = 70 + Math.min(zScore * 5, 20);
   }
 
+  // Apply confidence modifiers from category and temporal context
+  confidence += thresholds.minConfidenceBoost;
+  confidence += temporalContext.confidenceModifier;
+  confidence = Math.min(confidence, 100);
+
   return {
     is_anomaly: isAnomaly,
     anomaly_type: anomalyType,
     z_score: zScore,
     discount_percentage: discountPercentage,
-    confidence: Math.min(confidence, 100),
+    confidence,
     mad_score: madScore,
     iqr_flag: iqrFlag,
+    category_applied: category?.toLowerCase().trim() ?? 'default',
+    temporal_context: {
+      is_maintenance_window: temporalContext.isMaintenanceWindow,
+      hour_of_day: temporalContext.hourOfDay,
+      day_of_week: temporalContext.dayOfWeek,
+    },
+    thresholds_used: {
+      mad_threshold: thresholds.madThreshold,
+      drop_threshold: thresholds.dropThreshold,
+    },
   };
 }
 

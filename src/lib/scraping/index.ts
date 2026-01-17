@@ -455,7 +455,11 @@ export async function scrapeAndDetect(url: string): Promise<ScrapeResult> {
   const detection = detectAnomaly(
     product.price,
     product.originalPrice || null,
-    historicalPrices
+    historicalPrices,
+    {
+      category: product.category,
+      timestamp: scrapedAt,
+    }
   );
 
   if (!detection.is_anomaly) {

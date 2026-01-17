@@ -112,6 +112,17 @@ export interface DetectResult {
   // NEW FIELDS for A/B testing
   mad_score: number;         // Double MAD score
   iqr_flag: boolean;         // Whether price is outside adjusted IQR bounds
+  // Category and temporal context fields
+  category_applied: string;           // Which category thresholds were used
+  temporal_context: {
+    is_maintenance_window: boolean;
+    hour_of_day: number;
+    day_of_week: number;
+  };
+  thresholds_used: {
+    mad_threshold: number;
+    drop_threshold: number;
+  };
 }
 
 export interface ValidationResult {
