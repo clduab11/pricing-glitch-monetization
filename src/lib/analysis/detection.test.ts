@@ -109,9 +109,34 @@ describe('Detection Module', () => {
       // Right-skewed: most prices low, few high outliers
       const historicalPrices = [90, 92, 95, 98, 100, 100, 102, 105, 150, 200];
       const lowPrice = 50;
-      
+
       // Should detect low price as outlier even with high outliers present
       expect(isOutsideAdjustedIQR(lowPrice, historicalPrices)).toBe(true);
+    });
+
+    it('should accept custom multiplier parameter', () => {
+      const historicalPrices = [95, 98, 99, 100, 100, 100, 101, 102, 103, 105];
+      const borderlinePrice = 96;
+
+      // With higher multiplier (wider bounds), should not flag
+      const resultHigh = isOutsideAdjustedIQR(borderlinePrice, historicalPrices, 3.0);
+      // With lower multiplier (tighter bounds), should flag
+      const resultLow = isOutsideAdjustedIQR(borderlinePrice, historicalPrices, 1.5);
+
+      // The multiplier has a tangible effect on this borderline price.
+      expect(resultHigh).toBe(false);
+      expect(resultLow).toBe(true);
+    });
+
+    it('should use default multiplier of 2.2 when not specified', () => {
+      const historicalPrices = [95, 98, 99, 100, 100, 100, 101, 102, 103, 105];
+      const price = 50;
+
+      // These should produce the same result
+      const resultDefault = isOutsideAdjustedIQR(price, historicalPrices);
+      const resultExplicit = isOutsideAdjustedIQR(price, historicalPrices, 2.2);
+
+      expect(resultDefault).toBe(resultExplicit);
     });
   });
 
@@ -224,10 +249,63 @@ describe('Detection Module', () => {
     it('should detect anomaly with IQR flag and percentage drop', () => {
       const historicalPrices = [95, 98, 99, 100, 100, 100, 101, 102, 103, 105];
       const result = detectAnomaly(30, 100, historicalPrices);
-      
+
       if (result.iqr_flag && result.discount_percentage > 50) {
         expect(result.confidence).toBeGreaterThan(70);
       }
+    });
+
+    it('should include new category and temporal context fields', () => {
+      const result = detectAnomaly(50, 100, [100, 100, 100]);
+
+      expect(result).toHaveProperty('category_applied');
+      expect(result).toHaveProperty('temporal_context');
+      expect(result).toHaveProperty('thresholds_used');
+      expect(result.category_applied).toBe('default');
+      expect(result.temporal_context.is_maintenance_window).toBe(false);
+      expect(result.thresholds_used.mad_threshold).toBe(3.0);
+      expect(result.thresholds_used.drop_threshold).toBe(50);
+      expect(result.thresholds_used.iqr_multiplier).toBe(2.2);
+      expect(result.thresholds_used.min_confidence_boost).toBe(0);
+    });
+
+    it('should accept options with category', () => {
+      const result = detectAnomaly(50, 100, [100, 100, 100], { category: 'electronics' });
+
+      expect(result.category_applied).toBe('electronics');
+      expect(result.thresholds_used.mad_threshold).toBe(2.5);
+      expect(result.thresholds_used.drop_threshold).toBe(40);
+      expect(result.thresholds_used.iqr_multiplier).toBe(2.0);
+      expect(result.thresholds_used.min_confidence_boost).toBe(10);
+    });
+
+    it('should accept options with timestamp', () => {
+      const maintenanceTime = new Date('2025-01-15T03:30:00');
+      const result = detectAnomaly(50, 100, [100, 100, 100], { timestamp: maintenanceTime });
+
+      expect(result.temporal_context.is_maintenance_window).toBe(true);
+      expect(result.temporal_context.hour_of_day).toBe(3);
+    });
+
+    it('should accept options with both category and timestamp', () => {
+      const maintenanceTime = new Date('2025-01-15T03:30:00');
+      const result = detectAnomaly(50, 100, [100, 100, 100], {
+        category: 'electronics',
+        timestamp: maintenanceTime
+      });
+
+      expect(result.category_applied).toBe('electronics');
+      expect(result.temporal_context.is_maintenance_window).toBe(true);
+    });
+
+    it('should resolve unknown category to default', () => {
+      const result = detectAnomaly(50, 100, [100, 100, 100], { category: 'unknownCategory' });
+
+      expect(result.category_applied).toBe('default');
+      expect(result.thresholds_used.mad_threshold).toBe(3.0);
+      expect(result.thresholds_used.drop_threshold).toBe(50);
+      expect(result.thresholds_used.iqr_multiplier).toBe(2.2);
+      expect(result.thresholds_used.min_confidence_boost).toBe(0);
     });
   });
 
