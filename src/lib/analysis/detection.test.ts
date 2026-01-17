@@ -116,17 +116,16 @@ describe('Detection Module', () => {
 
     it('should accept custom multiplier parameter', () => {
       const historicalPrices = [95, 98, 99, 100, 100, 100, 101, 102, 103, 105];
-      const borderlinePrice = 80;
+      const borderlinePrice = 95;
 
-      // With higher multiplier (wider bounds), might not flag
+      // With higher multiplier (wider bounds), should not flag
       const resultHigh = isOutsideAdjustedIQR(borderlinePrice, historicalPrices, 3.0);
-      // With lower multiplier (tighter bounds), more likely to flag
+      // With lower multiplier (tighter bounds), should flag
       const resultLow = isOutsideAdjustedIQR(borderlinePrice, historicalPrices, 1.5);
 
-      // Lower multiplier should be more sensitive (or equally sensitive)
-      // Note: exact behavior depends on the distribution
-      expect(typeof resultHigh).toBe('boolean');
-      expect(typeof resultLow).toBe('boolean');
+      // The multiplier has a tangible effect on this borderline price.
+      expect(resultHigh).toBe(false);
+      expect(resultLow).toBe(true);
     });
 
     it('should use default multiplier of 2.2 when not specified', () => {
