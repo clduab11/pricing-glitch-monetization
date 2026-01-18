@@ -97,10 +97,21 @@ export async function validateAnomaly(anomaly: PricingAnomaly): Promise<Validati
  * Format anomaly data for AI analysis
  */
 function formatAnomalyForAI(anomaly: PricingAnomaly): string {
-  // Use non-null assertion or optional chaining for optional product properties
-  const product = anomaly.product!;
+  const product = anomaly.product;
   const { anomalyType, zScore, discountPercentage, initialConfidence } = anomaly;
-  
+
+  // Handle case where product details are unavailable
+  if (!product) {
+    return `Analyze this pricing anomaly (product details unavailable):
+Anomaly Type: ${anomalyType}
+Discount: ${discountPercentage.toFixed(1)}%
+Z-Score: ${zScore?.toFixed(2) || 'N/A'}
+Initial Confidence: ${initialConfidence}%
+Detection Time: ${anomaly.detectedAt}
+
+Is this a pricing glitch or a legitimate sale?`;
+  }
+
   return `Analyze this potential pricing error:
 
 Product: ${product.title}

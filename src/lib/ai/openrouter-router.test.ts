@@ -43,7 +43,7 @@ describe('OpenRouter Weighted Router', () => {
       }
     });
 
-    it('all SOTA models should have standard tier', () => {
+    it('all SOTA models should have sota tier', () => {
       for (const model of SOTA_MODELS) {
         expect(model.tier).toBe('sota');
         expect(model.costPer1kTokens).toBeGreaterThan(0);
@@ -174,15 +174,15 @@ describe('OpenRouter Weighted Router', () => {
       }
 
       // Higher weight models should have more calls
-      // Gemini 2.5 Flash (weight 16) should have more than Llama 3.3 (weight 5)
+      // Gemini 2.0 Flash (weight 16) should have more than Mistral Nemo (weight 5)
       const geminiFlash = FREE_MODELS.find(
-        (m) => m.id === 'google/gemini-2.5-flash:free'
+        (m) => m.id === 'google/gemini-2.0-flash-exp:free'
       )!;
-      const llama33 = FREE_MODELS.find(
-        (m) => m.id === 'meta-llama/llama-3.3-70b-instruct:free'
+      const mistralNemo = FREE_MODELS.find(
+        (m) => m.id === 'mistralai/mistral-nemo:free'
       )!;
 
-      expect(counts[geminiFlash.id]).toBeGreaterThan(counts[llama33.id]);
+      expect(counts[geminiFlash.id]).toBeGreaterThan(counts[mistralNemo.id]);
     });
   });
 

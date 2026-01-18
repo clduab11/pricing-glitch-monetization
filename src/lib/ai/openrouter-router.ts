@@ -40,8 +40,8 @@ export interface ModelConfig {
 export const FREE_MODELS: ModelConfig[] = [
   // Tier 1: Best performers (highest weights) - Latest flagship models
   {
-    id: 'google/gemini-2.5-flash:free',
-    name: 'Gemini 2.5 Flash',
+    id: 'google/gemini-2.0-flash-exp:free',
+    name: 'Gemini 2.0 Flash Experimental',
     weight: 16,
     tier: 'standard',
     contextWindow: 1048576,
@@ -58,8 +58,8 @@ export const FREE_MODELS: ModelConfig[] = [
     costPer1kTokens: 0,
   },
   {
-    id: 'meta-llama/llama-4-maverick:free',
-    name: 'Llama 4 Maverick',
+    id: 'meta-llama/llama-3.3-70b-instruct:free',
+    name: 'Llama 3.3 70B Instruct',
     weight: 14,
     tier: 'standard',
     contextWindow: 131072,
@@ -68,7 +68,7 @@ export const FREE_MODELS: ModelConfig[] = [
   },
   {
     id: 'deepseek/deepseek-r1-0528:free',
-    name: 'DeepSeek R1 (May 2028)',
+    name: 'DeepSeek R1 (0528)',
     weight: 13,
     tier: 'standard',
     contextWindow: 163840,
@@ -96,28 +96,28 @@ export const FREE_MODELS: ModelConfig[] = [
     costPer1kTokens: 0,
   },
   {
-    id: 'google/gemini-3-flash-preview:free',
-    name: 'Gemini 3 Flash Preview',
+    id: 'meta-llama/llama-3.1-405b-instruct:free',
+    name: 'Llama 3.1 405B Instruct',
     weight: 10,
     tier: 'standard',
-    contextWindow: 1048576,
-    strengths: ['reasoning', 'analysis', 'multimodal'],
+    contextWindow: 131072,
+    strengths: ['reasoning', 'analysis', 'instruction-following'],
     costPer1kTokens: 0,
   },
   {
-    id: 'deepseek/deepseek-v3.2:free',
-    name: 'DeepSeek V3.2',
+    id: 'qwen/qwen-3-235b-a22b:free',
+    name: 'Qwen 3 235B',
     weight: 9,
     tier: 'standard',
     contextWindow: 131072,
-    strengths: ['roleplay', 'science', 'reasoning'],
+    strengths: ['reasoning', 'science', 'analysis'],
     costPer1kTokens: 0,
   },
 
   // Tier 3: Reliable fallbacks (lower weights) - Solid alternatives
   {
-    id: 'meta-llama/llama-4-scout:free',
-    name: 'Llama 4 Scout',
+    id: 'meta-llama/llama-3.1-70b-instruct:free',
+    name: 'Llama 3.1 70B Instruct',
     weight: 8,
     tier: 'standard',
     contextWindow: 131072,
@@ -125,8 +125,8 @@ export const FREE_MODELS: ModelConfig[] = [
     costPer1kTokens: 0,
   },
   {
-    id: 'nvidia/nemotron-3-nano:free',
-    name: 'Nemotron 3 Nano',
+    id: 'nvidia/nemotron-3-nano-30b-a3b:free',
+    name: 'Nemotron 3 Nano 30B',
     weight: 7,
     tier: 'standard',
     contextWindow: 262144,
@@ -134,8 +134,8 @@ export const FREE_MODELS: ModelConfig[] = [
     costPer1kTokens: 0,
   },
   {
-    id: 'mistralai/mistral-small-3.1:free',
-    name: 'Mistral Small 3.1',
+    id: 'mistralai/mistral-small-3.1-24b-instruct:free',
+    name: 'Mistral Small 3.1 24B Instruct',
     weight: 6,
     tier: 'standard',
     contextWindow: 131072,
@@ -143,8 +143,8 @@ export const FREE_MODELS: ModelConfig[] = [
     costPer1kTokens: 0,
   },
   {
-    id: 'meta-llama/llama-3.3-70b-instruct:free',
-    name: 'Llama 3.3 70B',
+    id: 'mistralai/mistral-nemo:free',
+    name: 'Mistral Nemo',
     weight: 5,
     tier: 'standard',
     contextWindow: 131072,
@@ -197,7 +197,7 @@ interface RouterState {
   weightAccumulator: number[];
   totalWeight: number;
   callCounts: Map<string, number>;
-  errorCounts: Map<string, number>;
+  errorTimestamps: Map<string, number[]>; // Track error timestamps for circuit breaker
   lastModelUsed: string | null;
   sotaCallCount: number;
 }
@@ -207,7 +207,7 @@ const state: RouterState = {
   weightAccumulator: [],
   totalWeight: 0,
   callCounts: new Map(),
-  errorCounts: new Map(),
+  errorTimestamps: new Map(),
   lastModelUsed: null,
   sotaCallCount: 0,
 };
@@ -288,11 +288,20 @@ export function isUnicornOpportunity(context: UnicornContext): boolean {
 // ============================================================================
 
 /**
+ * Get count of recent errors (within last 5 minutes) for a model
+ */
+function getRecentErrorCount(modelId: string): number {
+  const timestamps = state.errorTimestamps.get(modelId) || [];
+  const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+  return timestamps.filter((ts) => ts > fiveMinutesAgo).length;
+}
+
+/**
  * Select the next model using weighted round-robin
  */
 export function selectModel(context?: UnicornContext): ModelConfig {
-  // Check for unicorn opportunity
-  if (context && isUnicornOpportunity(context)) {
+  // Check for unicorn opportunity (only if SOTA models are enabled)
+  if (context && isSotaEnabled() && isUnicornOpportunity(context)) {
     return selectSotaModel();
   }
 
@@ -312,8 +321,8 @@ function selectStandardModel(): ModelConfig {
       const model = FREE_MODELS[i];
 
       // Skip if model has too many recent errors (circuit breaker)
-      const errorCount = state.errorCounts.get(model.id) || 0;
-      if (errorCount >= 3) {
+      const recentErrors = getRecentErrorCount(model.id);
+      if (recentErrors >= 3) {
         // Try next model
         const nextIndex = (i + 1) % FREE_MODELS.length;
         const fallback = FREE_MODELS[nextIndex];
@@ -366,25 +375,24 @@ function trackModelSelection(modelId: string): void {
 
 /**
  * Report a model error (for circuit breaker logic)
+ * Uses timestamp-based sliding window instead of timers for serverless compatibility
  */
 export function reportModelError(modelId: string): void {
-  const current = state.errorCounts.get(modelId) || 0;
-  state.errorCounts.set(modelId, current + 1);
+  const timestamps = state.errorTimestamps.get(modelId) || [];
+  timestamps.push(Date.now());
+  state.errorTimestamps.set(modelId, timestamps);
 
-  // Schedule error count reset after 5 minutes
-  setTimeout(() => {
-    const count = state.errorCounts.get(modelId) || 0;
-    if (count > 0) {
-      state.errorCounts.set(modelId, count - 1);
-    }
-  }, 5 * 60 * 1000);
+  // Clean up old timestamps (older than 5 minutes) to prevent unbounded growth
+  const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+  const recentTimestamps = timestamps.filter((ts) => ts > fiveMinutesAgo);
+  state.errorTimestamps.set(modelId, recentTimestamps);
 }
 
 /**
- * Report model success (reset error count)
+ * Report model success (clear error timestamps)
  */
 export function reportModelSuccess(modelId: string): void {
-  state.errorCounts.set(modelId, 0);
+  state.errorTimestamps.set(modelId, []);
 }
 
 // ============================================================================
@@ -547,9 +555,10 @@ export function getRouterStats(): RouterStats {
   }
 
   const errorRates: Record<string, number> = {};
-  for (const [modelId, errors] of Array.from(state.errorCounts.entries())) {
+  for (const [modelId, timestamps] of Array.from(state.errorTimestamps.entries())) {
     const calls = state.callCounts.get(modelId) || 0;
-    errorRates[modelId] = calls > 0 ? errors / calls : 0;
+    const recentErrors = getRecentErrorCount(modelId);
+    errorRates[modelId] = calls > 0 ? recentErrors / calls : 0;
   }
 
   return {
@@ -566,7 +575,7 @@ export function getRouterStats(): RouterStats {
  */
 export function resetRouterStats(): void {
   state.callCounts.clear();
-  state.errorCounts.clear();
+  state.errorTimestamps.clear();
   state.sotaCallCount = 0;
   state.lastModelUsed = null;
 }
