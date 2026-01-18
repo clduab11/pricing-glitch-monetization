@@ -1,0 +1,58 @@
+name: Claude
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened, edited]
+
+jobs:
+  claude:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Claude Code Action
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          assignee_trigger: clduab11
+          timeout_minutes: "60"
+          custom_instructions: |
+            This is the PriceHawk repository - a Next.js 14 + TypeScript price monitoring application.
+            
+            ## Project Structure
+            - `src/app`: Next.js pages + API routes
+            - `src/lib`: integrations (Stripe, AI validation, notifications, scraping)
+            - `src/db`: Prisma client + DB utilities
+            - `src/scrapers`: BullMQ/Playwright scraping worker
+            - `src/workers`: stream workers (validation + notifications)
+            - `prisma`: schema, migrations, seed script
+            
+            ## Development Guidelines
+            - Use TypeScript-first implementations with strict types
+            - Use `zod` for request validation
+            - Never commit secrets; update `.env.example` with placeholders only
+            - Ensure Docker build succeeds: `docker build .`
+            - Run tests with: `npm test` (Vitest)
+            - Run linting with: `npm run lint` (ESLint)
+            
+            ## When Making Changes
+            - If you add/change an API route, update `docs/api/api-reference.md`
+            - If you add/change DB models, include a migration and update `docs/architecture/08-database-schema.md`
+            - Keep changes focused and minimally invasive
+            - Include a short description of the problem and the approach in PRs
